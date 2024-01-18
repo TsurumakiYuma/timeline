@@ -1,7 +1,8 @@
-Reddisのインストール
+＃Reddisのインストール
 
 会員登録
 1会員情報を保存するテーブルをデータベースに作成する
+```
 CREATE TABLE `users` (
     `id` INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
     `name` TEXT NOT NULL,
@@ -9,6 +10,7 @@ CREATE TABLE `users` (
     `password` TEXT NOT NULL,
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP
 );
+```
 
 2会員登録フォームの作成（メアドやハッシュ化も行う）
 vim public/signup.php
