@@ -1,7 +1,7 @@
-＃Reddisのインストール
+Reddisのインストール
 
 会員登録
-1会員情報を保存するテーブルをデータベースに作成する
+1. 会員情報を保存するテーブルをデータベースに作成する
 ```
 CREATE TABLE `users` (
     `id` INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
