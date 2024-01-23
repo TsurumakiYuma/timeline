@@ -1,4 +1,5 @@
 Reddisのインストール
+1. Redisサーバーをインストール<br>
 vim compose.yml↓
 ```
   redis:
