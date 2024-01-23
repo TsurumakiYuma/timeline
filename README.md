@@ -18,8 +18,8 @@ volumes:
   mysql:
 ```
 
-2. PHPのRedis用の拡張， phpredis を導入します
-vim Dockerfile↓
+2. PHPのRedis用の拡張， phpredis を導入<br>
+vim Dockerfileに追記↓
 ```diff
 FROM php:8.1-fpm-alpine AS php
 
@@ -35,7 +35,7 @@ RUN echo -e "post_max_size = 5M\nupload_max_filesize = 5M" >> ${PHP_INI_DIR}/php
 ```
 
 会員登録
-1. 会員情報を保存するテーブルをデータベースに作成する
+1. 会員情報を保存するテーブルをデータベースに作成
 ```
 CREATE TABLE `users` (
     `id` INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
