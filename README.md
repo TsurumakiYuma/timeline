@@ -46,7 +46,7 @@ CREATE TABLE `users` (
 );
 ```
 
-2. 会員登録フォームの作成（メアドやハッシュ化も行う）
+2. 会員登録フォームの作成（メアドやハッシュ化も行う）<br>
 vim public/signup.php↓
 ```
 <?php
