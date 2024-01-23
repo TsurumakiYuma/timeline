@@ -3,10 +3,10 @@ Reddisのインストール
 vim compose.yml↓
 ```diff
 +  redis:
-    container_name: redis
-    image: redis:latest
-    ports:
-      - 6379:6379
++    container_name: redis
++    image: redis:latest
++    ports:
++      - 6379:6379
 
 ```
 会員登録
