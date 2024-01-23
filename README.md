@@ -1,6 +1,6 @@
 Reddisのインストール
 1. Redisサーバーをインストール<br>
-vim compose.yml↓
+vim compose.ymlに追記↓
 ```diff
 +  redis:
 +    container_name: redis
