@@ -2,11 +2,11 @@ Reddisのインストール
 1. Redisサーバーをインストール<br>
 vim compose.yml↓
 ```
-+  redis:
-+    container_name: redis
-+    image: redis:latest
-+    ports:
-+      - 6379:6379
+  redis:
+    container_name: redis
+    image: redis:latest
+    ports:
+      - 6379:6379
 
 ```
 会員登録
