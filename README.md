@@ -95,7 +95,12 @@ if (!empty($_POST['name']) && !empty($_POST['email']) && !empty($_POST['password
 </form>
 ```
 
-vim public/signup_finish.php
+vim public/signup_finish.php↓
+```
+<h1>会員登録完了</h1>
+
+会員登録が完了しました。
+```
 
 4. ログインフォームの作成
 vim public/login.php
