@@ -102,9 +102,9 @@ vim public/signup_finish.php↓
 会員登録が完了しました。
 ```
 
-3. ログインフォームの作成
+3. ログインフォームの作成<br>
+vim public/login.php↓
 ```
-vim public/login.php
 <?php
 // DBに接続
 $dbh = new PDO('mysql:host=mysql;dbname=techc', 'root', '');
