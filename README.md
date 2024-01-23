@@ -7,15 +7,15 @@ vim compose.ymlに追記↓
       --character-set-server=utf8mb4
       --collation-server=utf8mb4_unicode_ci
       --max_allowed_packet=4MB
-+   redis:
-+     container_name: redis
-+     image: redis:latest
-+     ports:
-+       - 6379:6379
- volumes:
-   image:
-     driver: local
-   mysql:
++  redis:
++    container_name: redis
++    image: redis:latest
++    ports:
++      - 6379:6379
+volumes:
+  image:
+    driver: local
+  mysql:
 
 ```
 会員登録
