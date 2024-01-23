@@ -1,5 +1,13 @@
 Reddisのインストール
+vim compose.yml↓
+```
+  redis:
+    container_name: redis
+    image: redis:latest
+    ports:
+      - 6379:6379
 
+```
 会員登録
 1. 会員情報を保存するテーブルをデータベースに作成する
 ```
