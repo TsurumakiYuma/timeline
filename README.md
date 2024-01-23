@@ -1,8 +1,8 @@
 Reddisのインストール
 1. Redisサーバーをインストール<br>
 vim compose.yml↓
-```
- + redis:
+```diff
++  redis:
     container_name: redis
     image: redis:latest
     ports:
