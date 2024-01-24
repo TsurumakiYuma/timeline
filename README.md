@@ -924,7 +924,13 @@ $select_sth = $dbh->prepare(
       (ID: <?= htmlspecialchars($entry['user_id']) ?>)
     </dd>
 ```
-
+5. タイムアウトの時間を延ばす
+vim php.ini
+```diff
+session.save_handler = redis
+session.save_path = "tcp://redis:6379"
++ session.gc_maxlifetime = 86400
+```
 
 
 フォロー機能を作ってみましょう
