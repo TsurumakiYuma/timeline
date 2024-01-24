@@ -279,7 +279,6 @@ $user = $insert_sth->fetch();
 </dl>
 ```
 
-
 PHPのセッション機能を使う
 1. php.iniを整える<br>
 vim php.ini↓
@@ -437,6 +436,49 @@ ALTER TABLE `users` ADD COLUMN birthday DATE DEFAULT NULL;
 3. 設定画面の作成
 mkdir public/setting
 vim public/setting/index.php
+```
+<?php
+session_start();
+
+if (empty($_SESSION['login_user_id'])) {
+  header("HTTP/1.1 302 Found");
+  header("Location: /login.php");
+  return;
+}
+
+// DBに接続
+$dbh = new PDO('mysql:host=mysql;dbname=techc', 'root', '');
+// セッションにあるログインIDから、ログインしている対象の会員情報を引く
+$select_sth = $dbh->prepare("SELECT * FROM users WHERE id = :id");
+$select_sth->execute([
+    ':id' => $_SESSION['login_user_id'],
+]);
+$user = $select_sth->fetch();
+?>
+
+<a href="/bbs.php">掲示板に戻る</a>
+
+<h1>設定画面</h1>
+
+<p>
+  現在の設定
+</p>
+<dl> <!-- 登録情報を出力する際はXSS防止のため htmlspecialchars() を必ず使いましょう -->
+  <dt>ID</dt>
+  <dd><?= htmlspecialchars($user['id']) ?></dd>
+  <dt>メールアドレス</dt>
+  <dd><?= htmlspecialchars($user['email']) ?></dd>
+  <dt>名前</dt>
+  <dd><?= htmlspecialchars($user['name']) ?></dd>
+</dl>
+
+<ul>
+  <li><a href="./name.php">名前設定</a></li>
+  <li><a href="./icon.php">アイコン設定</a></li>
+  <li><a href="./introduction.php">自己紹介文設定</a></li>
+</ul>
+```
+
 vim public/setting/icon.php↓
 ```
 <?php
@@ -489,6 +531,7 @@ if (isset($_POST['image_base64'])) {
 }
 
 ?>
+<a href="./index.php">設定一覧に戻る</a>
 
 <h1>アイコン画像設定/変更</h1>
 
@@ -563,6 +606,74 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 </script>
 ```
+vim public/setting/name.php
+```
+<?php
+// セッションIDの取得(なければ新規で作成&設定)
+$session_cookie_name = 'session_id';
+$session_id = $_COOKIE[$session_cookie_name] ?? base64_encode(random_bytes(64));
+if (!isset($_COOKIE[$session_cookie_name])) {
+    setcookie($session_cookie_name, $session_id);
+}
+
+// 接続 (redisコンテナの6379番ポートに接続)
+$redis = new Redis();
+$redis->connect('redis', 6379);
+
+// Redisにセッション変数を保存しておくキー
+$redis_session_key = "session-" . $session_id;
+
+// Redisからセッションのデータを読み込み
+// 既にセッション変数(の配列)が何かしら格納されていればそれを，なければ空の配列を $session_values変数に保存
+$session_values = $redis->exists($redis_session_key)
+  ? json_decode($redis->get($redis_session_key), true)
+  : [];
+
+// セッションにログインIDが無ければ (=ログインされていない状態であれば) ログイン画面にリダイレクトさせる
+if (empty($session_values['login_user_id'])) {
+  header("HTTP/1.1 302 Found");
+  header("Location: /login.php");
+  return;
+}
+
+// DBに接続
+$dbh = new PDO('mysql:host=mysql;dbname=techc', 'root', '');
+// セッションにあるログインIDから、ログインしている対象の会員情報を引く
+$insert_sth = $dbh->prepare("SELECT * FROM users WHERE id = :id");
+$insert_sth->execute([
+    ':id' => $session_values['login_user_id'],
+]);
+$user = $insert_sth->fetch();
+
+if (isset($_POST['name'])) {
+  // フォームから name が送信されてきた場合の処理
+
+  // ログインしている会員情報のnameカラムを更新する
+  $insert_sth = $dbh->prepare("UPDATE users SET name = :name WHERE id = :id");
+  $insert_sth->execute([
+      ':id' => $user['id'],
+      ':name' => $_POST['name'],
+  ]);
+  // 成功したら成功したことを示すクエリパラメータつきのURLにリダイレクト
+  header("HTTP/1.1 302 Found");
+  header("Location: /setting/name.php?success=1");
+  return;
+}
+?>
+<a href="./index.php">設定一覧に戻る</a>
+
+<h1>名前変更</h1>
+<form method="POST">
+  <input type="text" name="name" value="<?= htmlspecialchars($user['name']) ?>">
+  <button type="submit">決定</button>
+</form>
+
+<?php if(!empty($_GET['success'])): ?>
+<div>
+  名前の変更処理が完了しました。
+</div>
+<?php endif; ?>
+```
 
 vim public/setting/introduction.php↓
 ```
@@ -599,6 +710,7 @@ if (isset($_POST['introduction'])) {
   return;
 }
 ?>
+<a href="./index.php">設定一覧に戻る</a>
 
 <h1>自己紹介設定</h1>
 <form method="POST">
