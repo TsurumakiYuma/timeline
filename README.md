@@ -826,10 +826,50 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 </script>
 ```
+2. ログインや会員登録フォームまわりの導線を整える
+3. vim public/login.php
+```diff
+<h1>ログイン</h1>
 
++ 初めての人は<a href="/signup.php">会員登録</a>しましょう。
++ <hr>
++ 
+<!-- ログインフォーム -->
+<form method="POST">
+  <!-- input要素のtype属性は全部textでも動くが、適切なものに設定すると利用者は使いやすい -->
+```
+vim public/login_finish.php
+```diff
+<h1>ログイン完了</h1>
 
-ログインや会員登録フォームまわりの導線を整える
+<p>
+-   ログイン完了しました!
++   ログイン完了しました!<br>
++   <a href="/bbs.php">掲示板はこちら</a>
+</p>
+<hr>
+<p>
+```
+vim public/signup.php
+```diff
 
+<h1>会員登録</h1>
+
++ 会員登録済の人は<a href="/login.php">ログイン</a>しましょう。
++ <hr>
++ 
+<!-- 登録フォーム -->
+<form method="POST">
+  <!-- input要素のtype属性は全部textでも動くが、適切なものに設定すると利用者は使いやすい -->
+```
+vim public/signup_finish.php
+```diff
+<h1>会員登録完了</h1>
+
+- 会員登録が完了しました。
++ 会員登録が完了しました。<br>
++ 登録した内容をもとに<a href="/login.php">ログイン</a>してください。
+```
 
 フォロー機能を作ってみましょう
 CREATE TABLE `user_relationships` (
