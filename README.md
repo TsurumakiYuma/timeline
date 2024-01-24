@@ -260,7 +260,19 @@ $user = $insert_sth->fetch();
 
 
 PHPのセッション機能を使う
-1php.iniの追加
+1. php.iniを整える
+vim php.ini↓
+```
+post_max_size = 5M
+upload_max_filesize = 5M
+```
+vim Dockerfile↓
+```diff
+RUN install -o www-data -g www-data -d /var/www/upload/image/
+
+- RUN echo -e "post_max_size = 5M\nupload_max_filesize = 5M" >> ${PHP_INI_DIR}/php.ini
++ COPY ./php.ini ${PHP_INI_DIR}/php.ini
+```
 
 設定画面の追加
 1まずアイコン画像のファイル名を保持するカラムを会員情報テーブル users に追加します。
