@@ -2109,6 +2109,112 @@ $select_sth->execute();
     <hr style="border: none; border-bottom: 1px solid gray;">
   <?php endforeach; ?>
 ```
+
+7. 名前で検索
+vim public/users.php
+```diff
+$dbh = new PDO('mysql:host=mysql;dbname=techc', 'root', '');
+
+// 会員データを取得
+- $select_sth = $dbh->prepare('SELECT * FROM users ORDER BY id DESC');
+- $select_sth->execute();
++ $sql = 'SELECT * FROM users WHERE';
++ $prepare_params = [];
++  
++ if (!empty($_GET['name'])) {
++   $sql .= ' name LIKE :name';
++   $prepare_params[':name'] = '%' . $_GET['name'] . '%';
++ }
++ 
++ if (empty($prepare_params)) {
++   // 検索がまったくない場合はWHERE句が空になってしまうため真となる適当な式を設定する
++   $sql .= ' 1 = 1';
++ }
++ 
++ $sql .= ' ORDER BY id DESC';
++ 
++ $select_sth = $dbh->prepare($sql);
++ $select_sth->execute($prepare_params);
+
+// ログインしている場合、フォローしている会員IDリストを取得
+$followee_user_ids = [];
+```
+
+```diff
+    <a href="/timeline.php">タイムライン</a>
+  </div>
+
++   <div style="margin-bottom: 1em;">
++     絞り込み<br>
++     <form method="GET">
++       名前: <input type="text" name="name" value="<?= htmlspecialchars($_GET['name'] ?? '') ?>"><br>
++       <button type="submit">決定</button>
++     </form>
++   </div>
++ 
+  <?php foreach($select_sth as $user): ?>
+    <div style="display: flex; justify-content: start; align-items: center; padding: 1em 2em;">
+      <?php if(empty($user['icon_filename'])): ?>
+```
+
+8. 生まれ年で検索
+vim public/users.php
+```diff
+$dbh = new PDO('mysql:host=mysql;dbname=techc', 'root', '');
+
+// 会員データを取得
+- $sql = 'SELECT * FROM users WHERE';
++ $sql = 'SELECT * FROM users';
++ $where_sql_array = [];
+$prepare_params = [];
+
+if (!empty($_GET['name'])) {
+-   $sql .= ' name LIKE :name';
++   $where_sql_array[] = ' name LIKE :name';
+  $prepare_params[':name'] = '%' . $_GET['name'] . '%';
+}
++ if (!empty($_GET['year_from'])) {
++   $where_sql_array[] = ' birthday >= :year_from';
++   $prepare_params[':year_from'] = $_GET['year_from'] . '-01-01'; // 入力年の1月1日
++ }
++ if (!empty($_GET['year_until'])) {
++   $where_sql_array[] = ' birthday <= :year_until';
++   $prepare_params[':year_until'] = $_GET['year_until'] . '-12-31'; // 入力年の12月31日
++ }
+
+- if (empty($prepare_params)) {
+-   // 検索がまったくない場合はWHERE句が空になってしまうため真となる適当な式を設定する
+-   $sql .= ' 1 = 1';
++ if (!empty($where_sql_array)) {
++   $sql .= ' WHERE ' . implode(' AND', $where_sql_array);
+}
+
+$sql .= ' ORDER BY id DESC';
+```
+
+```diff
+    絞り込み<br>
+    <form method="GET">
+      名前: <input type="text" name="name" value="<?= htmlspecialchars($_GET['name'] ?? '') ?>"><br>
++       生まれ年:
++       <input type="number" name="year_from" value="<?= htmlspecialchars($_GET['year_from'] ?? '') ?>">年
++       ~
++       <input type="number" name="year_until" value="<?= htmlspecialchars($_GET['year_until'] ?? '') ?>">年
++       <br>
+      <button type="submit">決定</button>
+    </form>
+  </div>
+```
+
+```diff
+      <a href="/profile.php?user_id=<?= $user['id'] ?>" style="margin-left: 1em;">
+        <?= htmlspecialchars($user['name']) ?>
+      </a>
++ 
+      <div style="margin-left: 2em;">
+        <?php if($user['id'] === $_SESSION['login_user_id']): ?>
+          これはあなたです!
+```
 タイムラインをJSでレンダリングする
 1. JSON形式でタイムラインの情報を出力する
 vim public/timeline_json.php
@@ -2175,3 +2281,143 @@ print(json_encode(['entries' => $result_entries]));
 ```
 
 2. JSON形式の情報をもとにJSでHTMLをレンダリングする
+vim public/timeline.php
+```diff
+  header("Location: ./timeline.php");
+  return;
+}
+
+- // 投稿データを取得。
+- // フォローしている人の投稿と自分自身の投稿のみ表示
+- $sql = 'SELECT bbs_entries.*, users.name AS user_name, users.icon_filename AS user_icon_filename'
+-   . ' FROM bbs_entries'
+-   . ' INNER JOIN users ON bbs_entries.user_id = users.id'
+-   . ' LEFT OUTER JOIN user_relationships ON bbs_entries.user_id = user_relationships.followee_user_id'
+-   . ' WHERE user_relationships.follower_user_id = :login_user_id OR bbs_entries.user_id = :login_user_id'
+-   . ' ORDER BY bbs_entries.created_at DESC';
+- $select_sth = $dbh->prepare($sql);
+- $select_sth->execute([
+-     ':login_user_id' => $_SESSION['login_user_id'],
+- ]);
+- 
+- // bodyのHTMLを出力するための関数を用意する
+- function bodyFilter (string $body): string
+- {
+-     $body = htmlspecialchars($body); // エスケープ処理
+-     $body = nl2br($body); // 改行文字を<br>要素に変換
+- 
+-     // >>1 といった文字列を該当番号の投稿へのページ内リンクとする (レスアンカー機能)
+-     // 「>」(半角の大なり記号)は htmlspecialchars() でエスケープされているため注意
+-      $body = preg_replace('/&gt;&gt;(\d+)/', '<a href="#entry$1">&gt;&gt;$1</a>', $body);
+- 
+-     return $body;
+- }
+?>
+
+<div>
+```
+
+```diff
+  <canvas id="imageCanvas" style="display: none;"></canvas><!-- 画像縮小に使うcanvas (非表示) -->
+  <button type="submit">送信</button>
+</form>
+
+- <?php foreach($select_sth as $entry): ?>
+-   <dl style="margin-bottom: 1em; padding-bottom: 1em; border-bottom: 1px solid #ccc;">
+-     <dt id="entry<?= htmlspecialchars($entry['id']) ?>">
+-       番号
+-     </dt>
+-     <dd>
+-       <?= htmlspecialchars($entry['id']) ?>
+-     </dd>
+-     <dt>
+-       投稿者
+-     </dt>
+-     <dd>
+-       <a href="/profile.php?user_id=<?= $entry['user_id'] ?>">
+-         <?php if(!empty($entry['user_icon_filename'])): // アイコン画像がある場合は表示 ?>
+-         <img src="/image/<?= $entry['user_icon_filename'] ?>"
+-           style="height: 2em; width: 2em; border-radius: 50%; object-fit: cover;">
+-         <?php endif; ?>
+- 
+-         <?= htmlspecialchars($entry['user_name']) ?>
+-         (ID: <?= htmlspecialchars($entry['user_id']) ?>)
+-       </a>
+-     </dd>
+-     <dt>日時</dt>
+-     <dd><?= $entry['created_at'] ?></dd>
+-     <dt>内容</dt>
+-     <dd>
+-       <?= bodyFilter($entry['body']) ?>
+-       <?php if(!empty($entry['image_filename'])): ?>
+-       <div>
+-         <img src="/image/<?= $entry['image_filename'] ?>" style="max-height: 10em;">
+-       </div>
+-       <?php endif; ?>
+-     </dd>
+-   </dl>
+- <?php endforeach ?>
++ <hr>
++ 
++ <dl id="entryTemplate" style="display: none; margin-bottom: 1em; padding-bottom: 1em; border-bottom: 1px solid #ccc;">
++   <dt>番号</dt>
++   <dd data-role="entryIdArea"></dd>
++   <dt>投稿者</dt>
++   <dd>
++     <a href="" data-role="entryUserAnchor"></a>
++   </dd>
++   <dt>日時</dt>
++   <dd data-role="entryCreatedAtArea"></dd>
++   <dt>内容</dt>
++   <dd data-role="entryBodyArea">
++   </dd>
++ </dl>
++ <div id="entriesRenderArea"></div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
++   const entryTemplate = document.getElementById('entryTemplate');
++   const entriesRenderArea = document.getElementById('entriesRenderArea');
++ 
++   const request = new XMLHttpRequest();
++   request.onload = (event) => {
++     const response = event.target.response;
++     response.entries.forEach((entry) => {
++       // テンプレートとするものから要素をコピー
++       const entryCopied = entryTemplate.cloneNode(true);
++ 
++       // display: none を display: block に書き換える
++       entryCopied.style.display = 'block';
++ 
++       // id属性を設定しておく(レスアンカ用)
++       entryCopied.id = 'entry' + entry.id.toString();
++ 
++       // 番号(ID)を表示
++       entryCopied.querySelector('[data-role="entryIdArea"]').innerText = entry.id.toString();
++ 
++       // 名前を表示
++       entryCopied.querySelector('[data-role="entryUserAnchor"]').innerText = entry.user_name;
++ 
++       // 名前のところのリンク先(プロフィール)のURLを設定
++       entryCopied.querySelector('[data-role="entryUserAnchor"]').href = entry.user_profile_url;
++ 
++       // 投稿日時を表示
++       entryCopied.querySelector('[data-role="entryCreatedAtArea"]').innerText = entry.created_at;
++ 
++       // 本文を表示 (ここはHTMLなのでinnerHTMLで)
++       entryCopied.querySelector('[data-role="entryBodyArea"]').innerHTML = entry.body;
++ 
++       // 最後に実際の描画を行う
++       entriesRenderArea.appendChild(entryCopied);
++     });
++   }
++   request.open('GET', '/timeline_json.php', true); // timeline_json.php を叩く
++   request.responseType = 'json';
++   request.send();
++ 
++ 
++   // 以下画像縮小用
+  const imageInput = document.getElementById("imageInput");
+  imageInput.addEventListener("change", () => {
+    if (imageInput.files.length < 1) {
+```
