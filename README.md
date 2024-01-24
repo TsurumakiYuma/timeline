@@ -294,7 +294,7 @@ RUN install -o www-data -g www-data -d /var/www/upload/image/
 + COPY ./php.ini ${PHP_INI_DIR}/php.ini
 ```
 
-2. 既存コードの書き換え
+2. 既存コードの書き換え<br>
 vim public/login.php↓
 ```diff
 - 
@@ -375,7 +375,8 @@ $insert_sth->execute([
 $user = $insert_sth->fetch();
 ?>
 ```
-PHPパスワード暗号化機能を使う
+
+3. PHPパスワード暗号化機能を使う<br>
 vim public/login.php↓
 ```diff
     return;
