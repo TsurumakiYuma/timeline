@@ -436,7 +436,7 @@ ALTER TABLE `users` ADD COLUMN cover_filename TEXT DEFAULT NULL;
 ALTER TABLE `users` ADD COLUMN birthday DATE DEFAULT NULL;
 ```
 
-2. 設定画面の作成
+2. 設定画面の作成<br>
 mkdir public/setting<br>
 vim public/setting/index.php
 ```
