@@ -2421,3 +2421,83 @@ document.addEventListener("DOMContentLoaded", () => {
   imageInput.addEventListener("change", () => {
     if (imageInput.files.length < 1) {
 ```
+
+3. 投稿の画像も表示されるように
+vim public/timeline.php
+```diff
+      // 本文を表示 (ここはHTMLなのでinnerHTMLで)
+      entryCopied.querySelector('[data-role="entryBodyArea"]').innerHTML = entry.body;
+
++       // 画像が存在する場合に本文の下部に画像を表示
++       if (entry.image_file_url !== undefined) {
++         const imageElement = new Image();
++         imageElement.src = entry.image_file_url; // 画像URLを設定
++         imageElement.style.display = 'block'; // ブロック要素にする (img要素はデフォルトではインライン要素のため)
++         imageElement.style.marginTop = '1em'; // 画像上部の余白を設定
++         imageElement.style.maxHeight = '300px'; // 画像を表示する最大サイズ(縦)を設定
++         imageElement.style.maxWidth = '300px'; // 画像を表示する最大サイズ(横)を設定
++         entryCopied.querySelector('[data-role="entryBodyArea"]').appendChild(imageElement); // 本文エリアに画像を追加
++       }
++ 
+      // 最後に実際の描画を行う
+      entriesRenderArea.appendChild(entryCopied);
+    });
+```
+
+vim public/timeline_json.php
+```diff
+    'user_name' => $entry['user_name'],
+    'user_profile_url' => '/profile.php?user_id=' . $entry['user_id'],
+    'body' => bodyFilter($entry['body']),
++     'image_file_url' => empty($entry['image_filename']) ? '' : ('/image/' . $entry['image_filename']),
+    'created_at' => $entry['created_at'],
+  ];
+  $result_entries[] = $result_entry;
+```
+
+4. 投稿者のアイコン画像も表示
+vim public/timeline.php
+```diff
+  <dd data-role="entryIdArea"></dd>
+  <dt>投稿者</dt>
+  <dd>
+-     <a href="" data-role="entryUserAnchor"></a>
++     <a href="" data-role="entryUserAnchor">
++       <img data-role="entryUserIconImage"
++         style="height: 2em; width: 2em; border-radius: 50%; object-fit: cover;">
++       <span data-role="entryUserNameArea"></span>
++     </a>
+  </dd>
+  <dt>日時</dt>
+  <dd data-role="entryCreatedAtArea"></dd>
+```
+
+```diff
+      // 番号(ID)を表示
+      entryCopied.querySelector('[data-role="entryIdArea"]').innerText = entry.id.toString();
+
++       // アイコン画像が存在する場合は表示 なければimg要素ごと非表示に
++       if (entry.user_icon_file_url !== undefined) {
++         entryCopied.querySelector('[data-role="entryUserIconImage"]').src = entry.user_icon_file_url;
++       } else {
++         entryCopied.querySelector('[data-role="entryUserIconImage"]').display = 'none';
++       }
++ 
+      // 名前を表示
+-       entryCopied.querySelector('[data-role="entryUserAnchor"]').innerText = entry.user_name;
++       entryCopied.querySelector('[data-role="entryUserNameArea"]').innerText = entry.user_name;
+
+      // 名前のところのリンク先(プロフィール)のURLを設定
+      entryCopied.querySelector('[data-role="entryUserAnchor"]').href = entry.user_profile_url;
+```
+
+vim public/timeline_json.php
+```diff
+  $result_entry = [
+    'id' => $entry['id'],
+    'user_name' => $entry['user_name'],
++     'user_icon_file_url' => empty($entry['user_icon_filename']) ? '' : ('/image/' . $entry['user_icon_filename']),
+    'user_profile_url' => '/profile.php?user_id=' . $entry['user_id'],
+    'body' => bodyFilter($entry['body']),
+    'image_file_url' => empty($entry['image_filename']) ? '' : ('/image/' . $entry['image_filename']),
+```
