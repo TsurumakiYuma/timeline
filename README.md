@@ -1144,7 +1144,7 @@ document.addEventListener("DOMContentLoaded", () => {
 </script>
 ```
 
-2. ログインや会員登録フォームまわりの導線を整える
+2. ログインや会員登録フォームまわりの導線を整える<br>
 vim public/login.php
 ```diff
 <h1>ログイン</h1>
@@ -1189,7 +1189,7 @@ vim public/signup_finish.php
 + 登録した内容をもとに<a href="/login.php">ログイン</a>してください。
 ```
 
-3. 掲示板の投稿で会員情報も同時に表示する
+3. 掲示板の投稿で会員情報も同時に表示<br>
 vim public/bbs.php
 ```diff
   return;
@@ -1218,7 +1218,7 @@ $select_sth->execute();
     <dt>日時</dt>
     <dd><?= $entry['created_at'] ?></dd>
 ```
-4. 掲示板の各投稿の横にアイコンを表示
+4. 掲示板の各投稿の横にアイコンを表示<br>
 vim public/bbs.php
 ```diff
 // 投稿データを取得。紐づく会員情報も結合し同時に取得する。
@@ -1242,7 +1242,7 @@ $select_sth = $dbh->prepare(
       (ID: <?= htmlspecialchars($entry['user_id']) ?>)
     </dd>
 ```
-5. 投稿の一覧から投稿者のプロフィールページに行けるように & プロフィールから掲示板に戻れるように
+5. 投稿の一覧からプロフィールページに行き来できるように<br>
 vim public/bbs.php
 ```diff
       投稿者
@@ -1277,7 +1277,7 @@ vim public/profile.php
 
 <h1><?= htmlspecialchars($user['name']) ?> さん のプロフィール</h1>
 ```
-6. プロフィールページにその人の投稿を表示
+6. プロフィールページに自分の投稿を表示<br>
 ```diff
   print("そのようなユーザーIDの会員情報は存在しません");
   return;
@@ -1320,7 +1320,7 @@ vim public/profile.php
 + <?php endforeach ?>
 ```
 
-6. タイムアウトの時間を延ばす
+7. タイムアウトの時間を延ばす<br>
 vim php.ini
 ```diff
 session.save_handler = redis
@@ -1329,7 +1329,8 @@ session.save_path = "tcp://redis:6379"
 ```
 
 
-フォロー機能の作成
+**フォロー機能の作成**
+1. データベースの作成
 ```
 CREATE TABLE `user_relationships` (
     `id` INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -1338,7 +1339,8 @@ CREATE TABLE `user_relationships` (
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 ```
-1. フォロー画面の作成
+
+2. フォロー画面の作成<br>
 vim public/follow.php
 ```
 <?php
@@ -1413,7 +1415,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') { // フォームでPOSTした場合�
 </div>
 <?php endif; ?>
 ```
-2. プロフィールページから遷移できるように
+3. プロフィールページから遷移できるように<br>
 vim public/profile.php
 ```diff
 $select_sth->execute([
@@ -1458,7 +1460,7 @@ $select_sth->execute([
   $birthday = DateTime::createFromFormat('Y-m-d', $user['birthday']);
 ```
 
-3.フォロー一覧
+4. フォロー一覧<br>
 vim public/follow_list.php 
 ```
 <?php
@@ -1507,7 +1509,7 @@ $select_sth->execute([
 </ul>
 ```
 
-4. フォロワー一覧
+5. フォロワー一覧<br>
 vim public/follower_list.php
 ```
 <?php
@@ -1556,7 +1558,7 @@ $select_sth->execute([
 </ul>
 ```
 
-5. フォロワーのプロフィールページに、フォローされている旨を表示
+6. フォロワーのプロフィールページに、フォローされている旨を表示<br>
 vim public/profile.php
 ```diff
   ]);
@@ -1597,7 +1599,7 @@ vim public/profile.php
 ```
 
 
-タイムラインの作成
+**タイムラインの作成**
 vim public/timeline.php
 ```
 <?php
@@ -1775,7 +1777,7 @@ document.addEventListener("DOMContentLoaded", () => {
 ```
 
 
-会員一覧画面を作る
+**会員一覧画面を作る**
 vim public/users.php
 ```
 <?php
@@ -1808,8 +1810,8 @@ $select_sth->execute();
 </body>
 ```
 
-同線管理
-1. 掲示板へのリンクをタイムラインへのリンクに変更
+**同線管理**
+1. 掲示板へのリンクをタイムラインへのリンクに変更<br>
 vim public/login_finish.php
 ```diff
 <p>
@@ -1863,7 +1865,7 @@ vim public/timeline.php
       <input type="file" accept="image/*" name="image" id="imageInput">
 ```
 
-2. 掲示板の投稿機能は削除
+2. 掲示板の投稿機能を削除<br>
 vim public/bbs.php
 ```
 <?php
@@ -1933,7 +1935,7 @@ function bodyFilter (string $body): string
 <?php endforeach ?>
 ```
 
-3. タイムラインにログイン状態表示
+3. タイムラインにログイン状態を表示<br>
 vim public/timeline.php
 ```diff
   return;
@@ -1991,7 +1993,7 @@ if (isset($_POST['body']) && !empty($_SESSION['login_user_id'])) {
 <?php foreach($select_sth as $entry): ?>
   <dl style="margin-bottom: 1em; padding-bottom: 1em; border-bottom: 1px solid #ccc;">
 ```
-4. 会員一覧画面にも同様に、設定画面/タイムラインへ遷移しやすいようにしましょう
+4. 会員一覧画面から設定画面、タイムラインへ遷移できるように<br>
 vim public/users.php
 ```diff
 <body>
@@ -2007,7 +2009,7 @@ vim public/users.php
     <div style="display: flex; justify-content: start; align-items: center; padding: 1em 2em;">
       <?php if(empty($user['icon_filename'])): ?>
 ```
-5. 自分自身のプロフィールを開いているときに、設定画面に遷移できるようにしてみましょう。また、自分自身に対するフォローボタンなどは非表示にするとよいですね。
+5. 自分のプロフィールから設定画面に遷移できるように、自分自身に対するフォローボタンを非表示に<br>
 vim public/profile.php
 ```diff
   <?php endif; ?>
@@ -2050,7 +2052,7 @@ vim public/profile.php
 <?php endif; ?>
 ```
 
-6. 直接フォローできるようにする
+6. 直接フォローできるようにする<br>
 vim public/follow.php
 ```diff
 <div>
@@ -2117,7 +2119,7 @@ $select_sth->execute();
   <?php endforeach; ?>
 ```
 
-7. 名前で検索
+7. 名前で検索<br>
 vim public/users.php
 ```diff
 $dbh = new PDO('mysql:host=mysql;dbname=techc', 'root', '');
@@ -2164,7 +2166,7 @@ $followee_user_ids = [];
       <?php if(empty($user['icon_filename'])): ?>
 ```
 
-8. 生まれ年で検索
+8. 生まれ年で検索<br>
 vim public/users.php
 ```diff
 $dbh = new PDO('mysql:host=mysql;dbname=techc', 'root', '');
@@ -2222,8 +2224,10 @@ $sql .= ' ORDER BY id DESC';
         <?php if($user['id'] === $_SESSION['login_user_id']): ?>
           これはあなたです!
 ```
-タイムラインをJSでレンダリングする
-1. JSON形式でタイムラインの情報を出力する
+
+
+**タイムラインをJSでレンダリングする**
+1. JSON形式でタイムラインの情報を出力<br>
 vim public/timeline_json.php
 ```
 <?php
@@ -2287,7 +2291,7 @@ header("Content-Type: application/json");
 print(json_encode(['entries' => $result_entries]));
 ```
 
-2. JSON形式の情報をもとにJSでHTMLをレンダリングする
+2. JSON形式の情報をもとにJSでHTMLをレンダリング<br>
 vim public/timeline.php
 ```diff
   header("Location: ./timeline.php");
@@ -2429,7 +2433,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (imageInput.files.length < 1) {
 ```
 
-3. 投稿の画像も表示されるように
+3. 投稿の画像も表示されるように<br>
 vim public/timeline.php
 ```diff
       // 本文を表示 (ここはHTMLなのでinnerHTMLで)
@@ -2462,7 +2466,7 @@ vim public/timeline_json.php
   $result_entries[] = $result_entry;
 ```
 
-4. 投稿者のアイコン画像も表示
+4. 投稿者のアイコン画像も表示<br>
 vim public/timeline.php
 ```diff
   <dd data-role="entryIdArea"></dd>
