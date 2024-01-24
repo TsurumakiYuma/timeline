@@ -427,12 +427,14 @@ if (!empty($_POST['name']) && !empty($_POST['email']) && !empty($_POST['password
 
 設定画面の追加
 1. まずカラムを会員情報テーブル users に追加
+```
 ALTER TABLE `users` ADD COLUMN icon_filename TEXT DEFAULT NULL;
 ALTER TABLE `users` ADD COLUMN introduction TEXT DEFAULT NULL;
 ALTER TABLE `users` ADD COLUMN cover_filename TEXT DEFAULT NULL;
 ALTER TABLE `users` ADD COLUMN birthday DATE DEFAULT NULL;
+```
 
-2. 設定画面の作成
+3. 設定画面の作成
 mkdir public/setting
 vim public/setting/index.php
 vim public/setting/icon.php↓
