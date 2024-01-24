@@ -1,4 +1,4 @@
-_Reddisのインストール_
+**Reddisのインストール**
 1. Redisサーバーをインストール<br>
 vim compose.ymlに追記↓
 ```diff
