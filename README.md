@@ -426,22 +426,232 @@ if (!empty($_POST['name']) && !empty($_POST['email']) && !empty($_POST['password
 ```
 
 設定画面の追加
-1まずアイコン画像のファイル名を保持するカラムを会員情報テーブル users に追加します。
+1. まずカラムを会員情報テーブル users に追加
 ALTER TABLE `users` ADD COLUMN icon_filename TEXT DEFAULT NULL;
 ALTER TABLE `users` ADD COLUMN introduction TEXT DEFAULT NULL;
 ALTER TABLE `users` ADD COLUMN cover_filename TEXT DEFAULT NULL;
 ALTER TABLE `users` ADD COLUMN birthday DATE DEFAULT NULL;
 
-2設定画面の作成
+2. 設定画面の作成
 mkdir public/setting
 vim public/setting/index.php
-vim public/setting/icon.php
-vim public/setting/introduction.php
+vim public/setting/icon.php↓
+```
+<?php
+session_start();
+
+if (empty($_SESSION['login_user_id'])) {
+  header("HTTP/1.1 302 Found");
+  header("Location: /login.php");
+  return;
+}
+
+// DBに接続
+$dbh = new PDO('mysql:host=mysql;dbname=techc', 'root', '');
+// セッションにあるログインIDから、ログインしている対象の会員情報を引く
+$select_sth = $dbh->prepare("SELECT * FROM users WHERE id = :id");
+$select_sth->execute([
+    ':id' => $_SESSION['login_user_id'],
+]);
+$user = $select_sth->fetch();
+
+if (isset($_POST['image_base64'])) {
+  // POSTで送られてくるフォームパラメータ image_base64 がある場合
+
+  $image_filename = null;
+  if (!empty($_POST['image_base64'])) {
+    // 先頭の data:~base64, のところは削る
+    $base64 = preg_replace('/^data:.+base64,/', '', $_POST['image_base64']);
+
+    // base64からバイナリにデコードする
+    $image_binary = base64_decode($base64);
+
+    // 新しいファイル名を決めてバイナリを出力する
+    $image_filename = strval(time()) . bin2hex(random_bytes(25)) . '.png';
+    $filepath =  '/var/www/upload/image/' . $image_filename;
+    file_put_contents($filepath, $image_binary);
+  }
+
+  // ログインしている会員情報のnameカラムを更新する
+  $update_sth = $dbh->prepare("UPDATE users SET icon_filename = :icon_filename WHERE id = :id");
+  $update_sth->execute([
+      ':id' => $user['id'],
+      ':icon_filename' => $image_filename,
+  ]);
+
+  // 処理が終わったらリダイレクトする
+  // リダイレクトしないと，リロード時にまた同じ内容でPOSTすることになる
+  header("HTTP/1.1 302 Found");
+  header("Location: ./icon.php");
+  return;
+}
+
+?>
+
+<h1>アイコン画像設定/変更</h1>
+
+<div>
+  <?php if(empty($user['icon_filename'])): ?>
+  現在未設定
+  <?php else: ?>
+  <img src="/image/<?= $user['icon_filename'] ?>"
+    style="height: 5em; width: 5em; border-radius: 50%; object-fit: cover;">
+  <?php endif; ?>
+</div>
+
+<form method="POST">
+  <div style="margin: 1em 0;">
+    <input type="file" accept="image/*" name="image" id="imageInput">
+  </div>
+  <input id="imageBase64Input" type="hidden" name="image_base64"><!-- base64を送る用のinput (非表示) -->
+  <canvas id="imageCanvas" style="display: none;"></canvas><!-- 画像縮小に使うcanvas (非表示) -->
+  <button type="submit">アップロード</button>
+</form>
+
+<hr>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const imageInput = document.getElementById("imageInput");
+  imageInput.addEventListener("change", () => {
+    if (imageInput.files.length < 1) {
+      // 未選択の場合
+      return;
+    }
+
+    const file = imageInput.files[0];
+    if (!file.type.startsWith('image/')){ // 画像でなければスキップ
+      return;
+    }
+
+    // 画像縮小処理
+    const imageBase64Input = document.getElementById("imageBase64Input"); // base64を送るようのinput
+    const canvas = document.getElementById("imageCanvas"); // 描画するcanvas
+    const reader = new FileReader();
+    const image = new Image();
+    reader.onload = () => { // ファイルの読み込み完了したら動く処理を指定
+      image.onload = () => { // 画像として読み込み完了したら動く処理を指定
+
+        // 元の縦横比を保ったまま縮小するサイズを決めてcanvasの縦横に指定する
+        const originalWidth = image.naturalWidth; // 元画像の横幅
+        const originalHeight = image.naturalHeight; // 元画像の高さ
+        const maxLength = 1000; // 横幅も高さも1000以下に縮小するものとする
+        if (originalWidth <= maxLength && originalHeight <= maxLength) { // どちらもmaxLength以下の場合そのまま
+            canvas.width = originalWidth;
+            canvas.height = originalHeight;
+        } else if (originalWidth > originalHeight) { // 横長画像の場合
+            canvas.width = maxLength;
+            canvas.height = maxLength * originalHeight / originalWidth;
+        } else { // 縦長画像の場合
+            canvas.width = maxLength * originalWidth / originalHeight;
+            canvas.height = maxLength;
+        }
+
+        // canvasに実際に画像を描画 (canvasはdisplay:noneで隠れているためわかりにくいが...)
+        const context = canvas.getContext("2d");
+        context.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+        // canvasの内容をbase64に変換しinputのvalueに設定
+        imageBase64Input.value = canvas.toDataURL();
+      };
+      image.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+});
+</script>
+```
+
+vim public/setting/introduction.php↓
+```
+<?php
+session_start();
+
+if (empty($_SESSION['login_user_id'])) {
+  header("HTTP/1.1 302 Found");
+  header("Location: /login.php");
+  return;
+}
+
+// DBに接続
+$dbh = new PDO('mysql:host=mysql;dbname=techc', 'root', '');
+// セッションにあるログインIDから、ログインしている対象の会員情報を引く
+$select_sth = $dbh->prepare("SELECT * FROM users WHERE id = :id");
+$select_sth->execute([
+    ':id' => $_SESSION['login_user_id'],
+]);
+$user = $select_sth->fetch();
+
+if (isset($_POST['introduction'])) {
+  // フォームから introduction が送信されてきた場合の処理
+
+  // ログインしている会員情報のintroductionカラムを更新する
+  $update_sth = $dbh->prepare("UPDATE users SET introduction = :introduction WHERE id = :id");
+  $update_sth->execute([
+      ':id' => $user['id'],
+      ':introduction' => $_POST['introduction'],
+  ]);
+  // 成功したら成功したことを示すクエリパラメータつきのURLにリダイレクト
+  header("HTTP/1.1 302 Found");
+  header("Location: ./introduction.php?success=1");
+  return;
+}
+?>
+
+<h1>自己紹介設定</h1>
+<form method="POST">
+  <textarea type="text" name="introduction" rows="5"
+    ><?= htmlspecialchars($user['introduction'] ?? '') ?></textarea>
+  <button type="submit">決定</button>
+</form>
+
+<?php if(!empty($_GET['success'])): ?>
+<div>
+  自己紹介文の設定処理が完了しました。
+</div>
+<?php endif; ?>
+```
+
 vim public/setting/cover.php
 vim public/setting/birthday.php
 
-3プロフィールページの作成
-vim public/profile.php
+4. プロフィールページの作成
+vim public/profile.php↓
+```
+<?php
+$user = null;
+if (!empty($_GET['user_id'])) {
+  $user_id = $_GET['user_id'];
+
+  // DBに接続
+  $dbh = new PDO('mysql:host=mysql;dbname=techc', 'root', '');
+  // 対象の会員情報を引く
+  $select_sth = $dbh->prepare("SELECT * FROM users WHERE id = :id");
+  $select_sth->execute([
+      ':id' => $user_id,
+  ]);
+  $user = $select_sth->fetch();
+}
+
+if (empty($user)) {
+  header("HTTP/1.1 404 Not Found");
+  print("そのようなユーザーIDの会員情報は存在しません");
+  return;
+}
+?>
+
+<h1><?= htmlspecialchars($user['name']) ?> さん のプロフィール</h1>
+
+<div>
+  <?php if(empty($user['icon_filename'])): ?>
+  現在未設定
+  <?php else: ?>
+  <img src="/image/<?= $user['icon_filename'] ?>"
+    style="height: 5em; width: 5em; border-radius: 50%; object-fit: cover;">
+  <?php endif; ?>
+</div>
+```
+
 
 
 会員サービスに紐づけた掲示板を作る
