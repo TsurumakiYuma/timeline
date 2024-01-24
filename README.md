@@ -894,7 +894,7 @@ if (isset($_POST['birthday'])) {
 <?php endif; ?>
 ```
 
-4. プロフィールページの作成
+4. プロフィールページの作成<br>
 vim public/profile.php↓
 ```
 <?php
