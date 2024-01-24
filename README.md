@@ -1770,6 +1770,342 @@ document.addEventListener("DOMContentLoaded", () => {
 
 会員一覧画面を作る
 vim public/users.php
+```
+<?php
+
+$dbh = new PDO('mysql:host=mysql;dbname=techc', 'root', '');
+
+// 会員データを取得
+$select_sth = $dbh->prepare('SELECT * FROM users ORDER BY id DESC');
+$select_sth->execute();
+?>
+
+<body>
+  <h1>会員一覧</h1>
+
+  <?php foreach($select_sth as $user): ?>
+    <div style="display: flex; justify-content: start; align-items: center; padding: 1em 2em;">
+      <?php if(empty($user['icon_filename'])): ?>
+        <!-- アイコン無い場合は同じ大きさの空白を表示して揃えておく -->
+        <div style="height: 2em; width: 2em;"></div>
+      <?php else: ?>
+        <img src="/image/<?= $user['icon_filename'] ?>"
+          style="height: 2em; width: 2em; border-radius: 50%; object-fit: cover;">
+      <?php endif; ?>
+      <a href="/profile.php?user_id=<?= $user['id'] ?>" style="margin-left: 1em;">
+        <?= htmlspecialchars($user['name']) ?>
+      </a>
+    </div>
+    <hr style="border: none; border-bottom: 1px solid gray;">
+  <?php endforeach; ?>
+</body>
+```
+
+同線管理
+1. 掲示板へのリンクをタイムラインへのリンクに変更
+vim public/login_finish.php
+```diff
+<p>
+  ログイン完了しました!<br>
+-   <a href="/bbs.php">掲示板はこちら</a>
++   <a href="/timeline.php">タイムラインはこちら</a>
+</p>
+<hr>
+<p>
+```
+vim puclic/profile.php
+```diff
+  $follower_relationship = $select_sth->fetch();
+}
+?>
+- <a href="/bbs.php">掲示板に戻る</a>
++ <a href="/timeline.php">タイムラインに戻る</a>
+
+<div style="
+    width: 100%; height: 15em;
+```
+vim public/setting/index.php
+```diff
+$user = $select_sth->fetch();
+?>
+
+- <a href="/bbs.php">掲示板に戻る</a>
++ <a href="/timeline.php">タイムラインに戻る</a>
+
+<h1>設定画面</h1>
+
+```
+vim public/timeline.php
+```diff
+  // 処理が終わったらリダイレクトする
+  // リダイレクトしないと，リロード時にまた同じ内容でPOSTすることになる
+  header("HTTP/1.1 302 Found");
+-   header("Location: ./bbs.php");
++   header("Location: ./timeline.php");
+  return;
+}
+```
+```diff
+<?php else: ?>
+  現在ログイン中 (<a href="/setting/index.php">設定画面はこちら</a>)
+  <!-- フォームのPOST先はこのファイル自身にする -->
+-   <form method="POST" action="./bbs.php"><!-- enctypeは外しておきましょう -->
++   <form method="POST" action="./timeline.php"><!-- enctypeは外しておきましょう -->
+    <textarea name="body" required></textarea>
+    <div style="margin: 1em 0;">
+      <input type="file" accept="image/*" name="image" id="imageInput">
+```
+
+2. 掲示板の投稿機能は削除
+vim public/bbs.php
+```
+<?php
+$dbh = new PDO('mysql:host=mysql;dbname=techc', 'root', '');
+
+session_start();
+
+// 投稿データを取得。紐づく会員情報も結合し同時に取得する。
+$select_sth = $dbh->prepare(
+  'SELECT bbs_entries.*, users.name AS user_name, users.icon_filename AS user_icon_filename'
+  . ' FROM bbs_entries INNER JOIN users ON bbs_entries.user_id = users.id'
+  . ' ORDER BY bbs_entries.created_at DESC'
+);
+$select_sth->execute();
+// bodyのHTMLを出力するための関数を用意する
+function bodyFilter (string $body): string
+{
+    $body = htmlspecialchars($body); // エスケープ処理
+    $body = nl2br($body); // 改行文字を<br>要素に変換
+    // >>1 といった文字列を該当番号の投稿へのページ内リンクとする (レスアンカー機能)
+    // 「>」(半角の大なり記号)は htmlspecialchars() でエスケープされているため注意
+    $body = preg_replace('/&gt;&gt;(\d+)/', '<a href="#entry$1">&gt;&gt;$1</a>', $body);
+    return $body;
+}
+?>
+
+<?php if(empty($_SESSION['login_user_id'])): ?>
+  <a href="/login.php">ログイン</a>して自分のタイムラインを閲覧しましょう！
+<?php else: ?>
+  <a href="/timeline.php">タイムラインはこちら</a>
+<?php endif; ?>
+<hr>
+
+<?php foreach($select_sth as $entry): ?>
+  <dl style="margin-bottom: 1em; padding-bottom: 1em; border-bottom: 1px solid #ccc;">
+    <dt id="entry<?= htmlspecialchars($entry['id']) ?>">
+      番号
+    </dt>
+    <dd>
+      <?= htmlspecialchars($entry['id']) ?>
+    </dd>
+    <dt>
+      投稿者
+    </dt>
+    <dd>
+      <a href="/profile.php?user_id=<?= $entry['user_id'] ?>">
+        <?php if(!empty($entry['user_icon_filename'])): // アイコン画像がある場合は表示 ?>
+        <img src="/image/<?= $entry['user_icon_filename'] ?>"
+          style="height: 2em; width: 2em; border-radius: 50%; object-fit: cover;">
+        <?php endif; ?>
+        <?= htmlspecialchars($entry['user_name']) ?>
+        (ID: <?= htmlspecialchars($entry['user_id']) ?>)
+      </a>
+    </dd>
+    <dt>日時</dt>
+    <dd><?= $entry['created_at'] ?></dd>
+    <dt>内容</dt>
+    <dd>
+      <?= bodyFilter($entry['body']) ?>
+      <?php if(!empty($entry['image_filename'])): ?>
+      <div>
+        <img src="/image/<?= $entry['image_filename'] ?>" style="max-height: 10em;">
+      </div>
+      <?php endif; ?>
+    </dd>
+  </dl>
+<?php endforeach ?>
+```
+
+3. タイムラインにログイン状態表示
+vim public/timeline.php
+```diff
+  return;
+}
+
++ // 現在のログイン情報を取得する
++ $user_select_sth = $dbh->prepare("SELECT * from users WHERE id = :id");
++ $user_select_sth->execute([':id' => $_SESSION['login_user_id']]);
++ $user = $user_select_sth->fetch();
++ 
+// 投稿処理
+if (isset($_POST['body']) && !empty($_SESSION['login_user_id'])) {
+```
+
+```diff
+}
+?>
+
+- <?php if(empty($_SESSION['login_user_id'])): ?>
+-   投稿するには<a href="/login.php">ログイン</a>が必要です。
+- <?php else: ?>
+-   現在ログイン中 (<a href="/setting/index.php">設定画面はこちら</a>)
+-   <!-- フォームのPOST先はこのファイル自身にする -->
+-   <form method="POST" action="./timeline.php"><!-- enctypeは外しておきましょう -->
+-     <textarea name="body" required></textarea>
+-     <div style="margin: 1em 0;">
+-       <input type="file" accept="image/*" name="image" id="imageInput">
+-     </div>
+-     <input id="imageBase64Input" type="hidden" name="image_base64"><!-- base64を送る用のinput (非表示) -->
+-     <canvas id="imageCanvas" style="display: none;"></canvas><!-- 画像縮小に使うcanvas (非表示) -->
+-     <button type="submit">送信</button>
+-   </form>
+- <?php endif; ?>
+- <hr>
++ <div>
++   現在 <?= htmlspecialchars($user['name']) ?> (ID: <?= $user['id'] ?>) さんでログイン中
++ </div>
++ <div style="margin-bottom: 1em;">
++   <a href="/setting/index.php">設定画面</a>
++   /
++   <a href="/users.php">会員一覧画面</a>
++ </div>
+
++ <!-- フォームのPOST先はこのファイル自身にする -->
++ <form method="POST" action="./timeline.php"><!-- enctypeは外しておきましょう -->
++   <textarea name="body" required></textarea>
++   <div style="margin: 1em 0;">
++     <input type="file" accept="image/*" name="image" id="imageInput">
++   </div>
++   <input id="imageBase64Input" type="hidden" name="image_base64"><!-- base64を送る用のinput (非表示) -->
++   <canvas id="imageCanvas" style="display: none;"></canvas><!-- 画像縮小に使うcanvas (非表示) -->
++   <button type="submit">送信</button>
++ </form>
+
+<?php foreach($select_sth as $entry): ?>
+  <dl style="margin-bottom: 1em; padding-bottom: 1em; border-bottom: 1px solid #ccc;">
+```
+4. 会員一覧画面にも同様に、設定画面/タイムラインへ遷移しやすいようにしましょう
+vim public/users.php
+```
+<body>
+  <h1>会員一覧</h1>
+
++   <div style="margin-bottom: 1em;">
++     <a href="/setting/index.php">設定画面</a>
++     /
++     <a href="/timeline.php">タイムライン</a>
++   </div>
+
+  <?php foreach($select_sth as $user): ?>
+    <div style="display: flex; justify-content: start; align-items: center; padding: 1em 2em;">
+      <?php if(empty($user['icon_filename'])): ?>
+```
+5. 自分自身のプロフィールを開いているときに、設定画面に遷移できるようにしてみましょう。また、自分自身に対するフォローボタンなどは非表示にするとよいですね。
+vim public/profile.php
+```
+  <?php endif; ?>
+</div>
+
+- <?php if(empty($relationship)): // フォローしていない場合 ?>
+- <div>
+-   <a href="./follow.php?followee_user_id=<?= $user['id'] ?>">フォローする</a>
+- </div>
+- <?php else: // フォローしている場合 ?>
+- <div>
+-   <?= $relationship['created_at'] ?> にフォローしました。
++ <?php if($user['id'] === $_SESSION['login_user_id']): // 自分自身の場合 ?>
++ <div style="margin: 1em 0;">
++   これはあなたです！<br>
++   <a href="/setting/index.php">設定画面はこちら</a>
+</div>
+- <?php endif; ?>
+- 
+- <?php if(!empty($follower_relationship)): // フォローされている場合 ?>
+- <div>
+-   フォローされています。
++ <?php else: // 他人の場合 ?>
++ <div style="margin: 1em 0;">
++   <?php if(empty($relationship)): // フォローしていない場合 ?>
++   <div>
++     <a href="./follow.php?followee_user_id=<?= $user['id'] ?>">フォローする</a>
++   </div>
++   <?php else: // フォローしている場合 ?>
++   <div>
++     <?= $relationship['created_at'] ?> にフォローしました。
++   </div>
++   <?php endif; ?>
++   <?php if(!empty($follower_relationship)): // フォローされている場合 ?>
++   <div>
++     フォローされています。
++   </div>
++   <?php endif; ?>
+</div>
+<?php endif; ?>
+```
 
 タイムラインをJSでレンダリングする
+1. JSON形式でタイムラインの情報を出力する
 vim public/timeline_json.php
+```
+<?php
+$dbh = new PDO('mysql:host=mysql;dbname=techc', 'root', '');
+
+session_start();
+if (empty($_SESSION['login_user_id'])) { // 非ログインの場合利用不可 401 で空のものを返す
+  header("HTTP/1.1 401 Unauthorized");
+  header("Content-Type: application/json");
+  print(json_encode(['entries' => []]));
+  return;
+}
+
+// 現在のログイン情報を取得する
+$user_select_sth = $dbh->prepare("SELECT * from users WHERE id = :id");
+$user_select_sth->execute([':id' => $_SESSION['login_user_id']]);
+$user = $user_select_sth->fetch();
+
+// 投稿データを取得。IN句の中身もプレースホルダを使うために、$target_user_ids の要素数だけ「?」を付けている。
+$sql = 'SELECT bbs_entries.*, users.name AS user_name, users.icon_filename AS user_icon_filename'
+  . ' FROM bbs_entries'
+  . ' INNER JOIN users ON bbs_entries.user_id = users.id'
+  . ' WHERE'
+  . '   bbs_entries.user_id IN'
+  . '     (SELECT followee_user_id FROM user_relationships WHERE follower_user_id = :login_user_id)'
+  . '   OR bbs_entries.user_id = :login_user_id'
+  . ' ORDER BY bbs_entries.created_at DESC';
+$select_sth = $dbh->prepare($sql);
+$select_sth->execute([
+  ':login_user_id' => $_SESSION['login_user_id'],
+]);
+
+// bodyのHTMLを出力するための関数を用意する
+function bodyFilter (string $body): string
+{
+  $body = htmlspecialchars($body); // エスケープ処理
+  $body = nl2br($body); // 改行文字を<br>要素に変換
+
+  // >>1 といった文字列を該当番号の投稿へのページ内リンクとする (レスアンカー機能)
+  // 「>」(半角の大なり記号)は htmlspecialchars() でエスケープされているため注意
+  $body = preg_replace('/&gt;&gt;(\d+)/', '<a href="#entry$1">&gt;&gt;$1</a>', $body);
+
+  return $body;
+}
+
+// JSONに吐き出す用のentries
+$result_entries = [];
+foreach ($select_sth as $entry) {
+  $result_entry = [
+    'id' => $entry['id'],
+    'user_name' => $entry['user_name'],
+    'user_profile_url' => '/profile.php?user_id=' . $entry['user_id'],
+    'body' => bodyFilter($entry['body']),
+    'created_at' => $entry['created_at'],
+  ];
+  $result_entries[] = $result_entry;
+}
+
+header("HTTP/1.1 200 OK");
+header("Content-Type: application/json");
+print(json_encode(['entries' => $result_entries]));
+```
+
+2. JSON形式の情報をもとにJSでHTMLをレンダリングする
