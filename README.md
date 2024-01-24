@@ -377,7 +377,7 @@ $user = $insert_sth->fetch();
 ```
 PHPパスワード暗号化機能を使う
 vim public/login.php↓
-```
+```diff
     return;
   }
 
@@ -399,6 +399,7 @@ vim public/login.php↓
     // パスワードが間違っていれば、処理を中断しエラー用クエリパラメータ付きのログイン画面URLにリダイレクト
 ```
 vim public/signup.php↓
+```diff
 if (!empty($_POST['name']) && !empty($_POST['email']) && !empty($_POST['password'])) {
   // POSTで name と email と password が送られてきた場合はDBへの登録処理をする
 
@@ -422,6 +423,7 @@ if (!empty($_POST['name']) && !empty($_POST['email']) && !empty($_POST['password
   ]);
 
   // 処理が終わったら完了画面にリダイレクト
+```
 
 設定画面の追加
 1まずアイコン画像のファイル名を保持するカラムを会員情報テーブル users に追加します。
