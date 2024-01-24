@@ -61,7 +61,7 @@ if (!empty($_POST['name']) && !empty($_POST['email']) && !empty($_POST['password
   $insert_sth->execute([
     ':name' => $_POST['name'],
     ':email' => $_POST['email'],
-    ':password' => hash('sha256', $_POST['password']),
+    ':password' => $_POST['password'],
   ]);
 
   // 処理が終わったら完了画面にリダイレクト
@@ -127,7 +127,7 @@ if (!empty($_POST['email']) && !empty($_POST['password'])) {
   }
 
   // パスワードが正しいかチェック
-  $correct_password = hash('sha256', $_POST['password']) === $user['password'];
+  $correct_password = $_POST['password'] === $user['password'];
 
   if (!$correct_password) {
     // パスワードが間違っていれば、処理を中断しエラー用クエリパラメータ付きのログイン画面URLにリダイレクト
