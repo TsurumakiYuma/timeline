@@ -475,6 +475,8 @@ $user = $select_sth->fetch();
 <ul>
   <li><a href="./name.php">名前設定</a></li>
   <li><a href="./icon.php">アイコン設定</a></li>
+  <li><a href="./cover.php">カバー画像設定</a></li>
+  <li><a href="./birthday.php">生年月日設定</a></li>
   <li><a href="./introduction.php">自己紹介文設定</a></li>
 </ul>
 ```
@@ -838,6 +840,54 @@ document.addEventListener("DOMContentLoaded", () => {
 </script>
 ```
 vim public/setting/birthday.php
+```
+<?php
+session_start();
+
+if (empty($_SESSION['login_user_id'])) {
+  header("HTTP/1.1 302 Found");
+  header("Location: /login.php");
+  return;
+}
+
+// DBに接続
+$dbh = new PDO('mysql:host=mysql;dbname=techc', 'root', '');
+// セッションにあるログインIDから、ログインしている対象の会員情報を引く
+$select_sth = $dbh->prepare("SELECT * FROM users WHERE id = :id");
+$select_sth->execute([
+    ':id' => $_SESSION['login_user_id'],
+]);
+$user = $select_sth->fetch();
+
+if (isset($_POST['birthday'])) {
+  // フォームから birthday が送信されてきた場合の処理
+
+  // ログインしている会員情報のbirthdayカラムを更新する
+  $update_sth = $dbh->prepare("UPDATE users SET birthday = :birthday WHERE id = :id");
+  $update_sth->execute([
+      ':id' => $user['id'],
+      ':birthday' => $_POST['birthday'],
+  ]);
+  // 成功したら成功したことを示すクエリパラメータつきのURLにリダイレクト
+  header("HTTP/1.1 302 Found");
+  header("Location: ./birthday.php?success=1");
+  return;
+}
+?>
+<a href="./index.php">設定一覧に戻る</a>
+
+<h1>生年月日</h1>
+<form method="POST">
+  <input type="date" name="birthday" value="<?= htmlspecialchars($user['birthday']) ?>">
+  <button type="submit">決定</button>
+</form>
+
+<?php if(!empty($_GET['success'])): ?>
+<div>
+  生年月日の変更処理が完了しました。
+</div>
+<?php endif; ?>
+```
 
 4. プロフィールページの作成
 vim public/profile.php↓
@@ -846,7 +896,6 @@ vim public/profile.php↓
 $user = null;
 if (!empty($_GET['user_id'])) {
   $user_id = $_GET['user_id'];
-
   // DBに接続
   $dbh = new PDO('mysql:host=mysql;dbname=techc', 'root', '');
   // 対象の会員情報を引く
@@ -856,16 +905,32 @@ if (!empty($_GET['user_id'])) {
   ]);
   $user = $select_sth->fetch();
 }
-
 if (empty($user)) {
   header("HTTP/1.1 404 Not Found");
   print("そのようなユーザーIDの会員情報は存在しません");
   return;
 }
+// 投稿データを取得。紐づく会員情報も結合し同時に取得する。
+$select_sth = $dbh->prepare(
+  'SELECT bbs_entries.*, users.name AS user_name, users.icon_filename AS user_icon_filename'
+  . ' FROM bbs_entries INNER JOIN users ON bbs_entries.user_id = users.id'
+  . ' WHERE user_id = :user_id'
+  . ' ORDER BY bbs_entries.created_at DESC'
+);
+$select_sth->execute([
+  ':user_id' => $user_id,
+]);
 ?>
-
+<a href="/bbs.php">掲示板に戻る</a>
+<div style="
+    width: 100%; height: 15em;
+    <?php if(!empty($user['cover_filename'])): ?>
+    background: url('/image/<?= $user['cover_filename'] ?>') center;
+    background-size: cover;
+    <?php endif; ?>
+  ">
+</div>
 <h1><?= htmlspecialchars($user['name']) ?> さん のプロフィール</h1>
-
 <div>
   <?php if(empty($user['icon_filename'])): ?>
   現在未設定
@@ -875,9 +940,33 @@ if (empty($user)) {
   <?php endif; ?>
 </div>
 
+<?php if(!empty($user['birthday'])): ?>
+<?php
+  $birthday = DateTime::createFromFormat('Y-m-d', $user['birthday']);
+  $today = new DateTime('now');
+?>
+  <?= $today->diff($birthday)->y ?>歳
+<?php endif; ?>
+
 <div>
   <?= nl2br(htmlspecialchars($user['introduction'] ?? '')) ?>
 </div>
+<hr>
+<?php foreach($select_sth as $entry): ?>
+  <dl style="margin-bottom: 1em; padding-bottom: 1em; border-bottom: 1px solid #ccc;">
+    <dt>日時</dt>
+    <dd><?= $entry['created_at'] ?></dd>
+    <dt>内容</dt>
+    <dd>
+      <?= htmlspecialchars($entry['body']) ?>
+      <?php if(!empty($entry['image_filename'])): ?>
+      <div>
+        <img src="/image/<?= $entry['image_filename'] ?>" style="max-height: 10em;">
+      </div>
+      <?php endif; ?>
+    </dd>
+  </dl>
+<?php endforeach ?>
 ```
 
 
@@ -1180,6 +1269,48 @@ vim public/profile.php
 + <a href="/bbs.php">掲示板に戻る</a>
 
 <h1><?= htmlspecialchars($user['name']) ?> さん のプロフィール</h1>
+```
+6. プロフィールページにその人の投稿を表示
+```diff
+  print("そのようなユーザーIDの会員情報は存在しません");
+  return;
+}
++ 
++ // 投稿データを取得。紐づく会員情報も結合し同時に取得する。
++ $select_sth = $dbh->prepare(
++   'SELECT bbs_entries.*, users.name AS user_name, users.icon_filename AS user_icon_filename'
++   . ' FROM bbs_entries INNER JOIN users ON bbs_entries.user_id = users.id'
++   . ' WHERE user_id = :user_id'
++   . ' ORDER BY bbs_entries.created_at DESC'
++ );
++ $select_sth->execute([
++   ':user_id' => $user_id,
++ ]);
+?>
+<a href="/bbs.php">掲示板に戻る</a>
+```
+```diff
+<div>
+  <?= nl2br(htmlspecialchars($user['introduction'] ?? '')) ?>
+</div>
++ 
++ <hr>
++ 
++ <?php foreach($select_sth as $entry): ?>
++   <dl style="margin-bottom: 1em; padding-bottom: 1em; border-bottom: 1px solid #ccc;">
++     <dt>日時</dt>
++     <dd><?= $entry['created_at'] ?></dd>
++     <dt>内容</dt>
++     <dd>
++       <?= htmlspecialchars($entry['body']) ?>
++       <?php if(!empty($entry['image_filename'])): ?>
++       <div>
++         <img src="/image/<?= $entry['image_filename'] ?>" style="max-height: 10em;">
++       </div>
++       <?php endif; ?>
++     </dd>
++   </dl>
++ <?php endforeach ?>
 ```
 
 6. タイムアウトの時間を延ばす
