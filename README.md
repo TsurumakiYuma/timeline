@@ -652,19 +652,31 @@ if (empty($user)) {
     style="height: 5em; width: 5em; border-radius: 50%; object-fit: cover;">
   <?php endif; ?>
 </div>
+
+<div>
+  <?= nl2br(htmlspecialchars($user['introduction'] ?? '')) ?>
+</div>
 ```
 
 
 
-会員サービスに紐づけた掲示板を作る
-1新しく掲示板投稿テーブルを作成します。
+会員サービスに紐づけた掲示板の作成
+1. 新しく掲示板投稿テーブルを作成します。
+```
+DROP TABLE bbs_entries;
+```
+```
 CREATE TABLE `bbs_entries` (
     `id` INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
     `user_id` INT UNSIGNED NOT NULL,
     `body` TEXT NOT NULL,
     `image_filename` TEXT DEFAULT NULL,
+    `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+```
 
-vim public/bbs.php
+vim public/bbs.php↓
+
 
 ログインや会員登録フォームまわりの導線を整える
 
