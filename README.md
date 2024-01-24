@@ -924,7 +924,43 @@ $select_sth = $dbh->prepare(
       (ID: <?= htmlspecialchars($entry['user_id']) ?>)
     </dd>
 ```
-5. タイムアウトの時間を延ばす
+5. 投稿の一覧から投稿者のプロフィールページに行けるように & プロフィールから掲示板に戻れるように
+vim public/bbs.php
+```diff
+      投稿者
+    </dt>
+    <dd>
+-       <?php if(!empty($entry['user_icon_filename'])): // アイコン画像がある場合は表示 ?>
+-       <img src="/image/<?= $entry['user_icon_filename'] ?>"
+-         style="height: 2em; width: 2em; border-radius: 50%; object-fit: cover;">
+-       <?php endif; ?>
+- 
+-       <?= htmlspecialchars($entry['user_name']) ?>
+-       (ID: <?= htmlspecialchars($entry['user_id']) ?>)
++       <a href="/profile.php?user_id=<?= $entry['user_id'] ?>">
++         <?php if(!empty($entry['user_icon_filename'])): // アイコン画像がある場合は表示 ?>
++         <img src="/image/<?= $entry['user_icon_filename'] ?>"
++           style="height: 2em; width: 2em; border-radius: 50%; object-fit: cover;">
++         <?php endif; ?>
++ 
++         <?= htmlspecialchars($entry['user_name']) ?>
++         (ID: <?= htmlspecialchars($entry['user_id']) ?>)
++       </a>
+    </dd>
+    <dt>日時</dt>
+    <dd><?= $entry['created_at'] ?></dd>
+```
+vim public/profile.php
+```diff
+  return;
+}
+?>
++ <a href="/bbs.php">掲示板に戻る</a>
+
+<h1><?= htmlspecialchars($user['name']) ?> さん のプロフィール</h1>
+```
+
+6. タイムアウトの時間を延ばす
 vim php.ini
 ```diff
 session.save_handler = redis
