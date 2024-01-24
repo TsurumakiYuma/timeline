@@ -1278,6 +1278,7 @@ vim public/profile.php
 <h1><?= htmlspecialchars($user['name']) ?> さん のプロフィール</h1>
 ```
 6. プロフィールページに自分の投稿を表示<br>
+vim public/profile.php
 ```diff
   print("そのようなユーザーIDの会員情報は存在しません");
   return;
