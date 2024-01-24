@@ -1322,17 +1322,137 @@ session.save_path = "tcp://redis:6379"
 ```
 
 
-フォロー機能を作ってみましょう
+フォロー機能の作成
+```
 CREATE TABLE `user_relationships` (
     `id` INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
     `followee_user_id` INT UNSIGNED NOT NULL,
     `follower_user_id` INT UNSIGNED NOT NULL,
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP
 );
-
+```
+1. フォロー画面の作成
 vim public/follow.php
+```
+<?php
+session_start();
+
+if (empty($_SESSION['login_user_id'])) {
+  header("HTTP/1.1 302 Found");
+  header("Location: ./login.php");
+  return;
+}
+
+// DBに接続
+$dbh = new PDO('mysql:host=mysql;dbname=techc', 'root', '');
+
+// フォロー対象(フォローされる側)のデータを引く
+$followee_user = null;
+if (!empty($_GET['followee_user_id'])) {
+  $select_sth = $dbh->prepare("SELECT * FROM users WHERE id = :id");
+  $select_sth->execute([
+      ':id' => $_GET['followee_user_id'],
+  ]);
+  $followee_user = $select_sth->fetch();
+}
+if (empty($followee_user)) {
+  header("HTTP/1.1 404 Not Found");
+  print("そのようなユーザーIDの会員情報は存在しません");
+  return;
+}
+
+// 現在のフォロー状態をDBから取得
+$select_sth = $dbh->prepare(
+  "SELECT * FROM user_relationships"
+  . " WHERE follower_user_id = :follower_user_id AND followee_user_id = :followee_user_id"
+);
+$select_sth->execute([
+    ':followee_user_id' => $followee_user['id'], // フォローされる側(フォロー対象)
+    ':follower_user_id' => $_SESSION['login_user_id'], // フォローする側はログインしている会員
+]);
+$relationship = $select_sth->fetch();
+if (!empty($relationship)) { // 既にフォロー関係がある場合は適当なエラー表示して終了
+  print("既にフォローしています。");
+  return;
+}
+
+$insert_result = false;
+if ($_SERVER['REQUEST_METHOD'] == 'POST') { // フォームでPOSTした場合は実際のフォロー登録処理を行う
+  $insert_sth = $dbh->prepare(
+    "INSERT INTO user_relationships (follower_user_id, followee_user_id) VALUES (:follower_user_id, :followee_user_id)"
+  );
+  $insert_result = $insert_sth->execute([
+      ':followee_user_id' => $followee_user['id'], // フォローされる側(フォロー対象)
+      ':follower_user_id' => $_SESSION['login_user_id'], // フォローする側はログインしている会員
+  ]);
+}
+?>
+
+<?php if($insert_result): ?>
+<div>
+  <?= htmlspecialchars($followee_user['name']) ?> さんをフォローしました。<br>
+  <a href="/profile.php?user_id=<?= $followee_user['id'] ?>">
+    <?= htmlspecialchars($followee_user['name']) ?> さんのプロフィールに戻る
+  </a>
+</div>
+<?php else: ?>
+<div>
+  <?= htmlspecialchars($followee_user['name']) ?> さんをフォローしますか?
+  <form method="POST">
+    <button type="submit">
+      フォローする
+    </button>
+  </form>
+</div>
+<?php endif; ?>
+```
+2. プロフィールページから遷移できるように
+vim public/profile.php
+```diff
+$select_sth->execute([
+  ':user_id' => $user_id,
+]);
++ 
++ // フォロー状態を取得
++ $relationship = null;
++ session_start();
++ if (!empty($_SESSION['login_user_id'])) { // ログインしている場合
++   // フォロー状態をDBから取得
++   $select_sth = $dbh->prepare(
++     "SELECT * FROM user_relationships"
++     . " WHERE follower_user_id = :follower_user_id AND followee_user_id = :followee_user_id"
++   );
++   $select_sth->execute([
++       ':followee_user_id' => $user['id'], // フォローされる側は閲覧しようとしているプロフィールの会員
++       ':follower_user_id' => $_SESSION['login_user_id'], // フォローする側はログインしている会員
++   ]);
++   $relationship = $select_sth->fetch();
+}
+?>
+<a href="/bbs.php">掲示板に戻る</a>
+```
+
+```diff
+  <?php endif; ?>
+</div>
+
++ <?php if(empty($relationship)): // フォローしていない場合 ?>
++ <div>
++   <a href="./follow.php?followee_user_id=<?= $user['id'] ?>">フォローする</a>
++ </div>
++ <?php else: // フォローしている場合 ?>
++ <div>
++   <?= $relationship['created_at'] ?> にフォローしました。
++ </div>
++ <?php endif; ?>
+
+<?php if(!empty($user['birthday'])): ?>
+<?php
+  $birthday = DateTime::createFromFormat('Y-m-d', $user['birthday']);
+```
 
 vim public/follow_list.php 
+
 
 vim public/follower_list.php 
 
