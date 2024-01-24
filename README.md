@@ -1,6 +1,6 @@
 **Reddisのインストール**
 1. Redisサーバーをインストール<br>
-vim compose.ymlに追記↓
+vim compose.ymlに追記
 ```diff
     command: >
       mysqld
@@ -34,7 +34,7 @@ RUN install -o www-data -g www-data -d /var/www/upload/image/
 RUN echo -e "post_max_size = 5M\nupload_max_filesize = 5M" >> ${PHP_INI_DIR}/php.ini
 ```
 
-会員登録
+**会員登録**
 1. 会員情報を保存するテーブルをデータベースに作成
 ```
 CREATE TABLE `users` (
@@ -279,7 +279,7 @@ $user = $insert_sth->fetch();
 </dl>
 ```
 
-PHPのセッション機能を使う
+**PHPのセッション機能**
 1. php.iniを整える<br>
 vim php.ini↓
 ```
@@ -293,6 +293,7 @@ RUN install -o www-data -g www-data -d /var/www/upload/image/
 - RUN echo -e "post_max_size = 5M\nupload_max_filesize = 5M" >> ${PHP_INI_DIR}/php.ini
 + COPY ./php.ini ${PHP_INI_DIR}/php.ini
 ```
+
 2. 既存コードの書き換え
 vim public/login.php↓
 ```diff
@@ -397,6 +398,7 @@ vim public/login.php↓
   if (!$correct_password) {
     // パスワードが間違っていれば、処理を中断しエラー用クエリパラメータ付きのログイン画面URLにリダイレクト
 ```
+
 vim public/signup.php↓
 ```diff
 if (!empty($_POST['name']) && !empty($_POST['email']) && !empty($_POST['password'])) {
@@ -424,7 +426,7 @@ if (!empty($_POST['name']) && !empty($_POST['email']) && !empty($_POST['password
   // 処理が終わったら完了画面にリダイレクト
 ```
 
-設定画面の追加
+**設定画面の追加**
 1. まずカラムを会員情報テーブル users に追加
 ```
 ALTER TABLE `users` ADD COLUMN icon_filename TEXT DEFAULT NULL;
@@ -433,8 +435,8 @@ ALTER TABLE `users` ADD COLUMN cover_filename TEXT DEFAULT NULL;
 ALTER TABLE `users` ADD COLUMN birthday DATE DEFAULT NULL;
 ```
 
-3. 設定画面の作成
-mkdir public/setting
+2. 設定画面の作成
+mkdir public/setting<br>
 vim public/setting/index.php
 ```
 <?php
@@ -608,6 +610,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 </script>
 ```
+
 vim public/setting/name.php
 ```
 <?php
@@ -839,6 +842,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 </script>
 ```
+
 vim public/setting/birthday.php
 ```
 <?php
@@ -971,11 +975,12 @@ $select_sth->execute([
 
 
 
-会員サービスに紐づけた掲示板の作成
-1. 新しく掲示板投稿テーブルを作成します。
+**会員サービスに紐づけた掲示板の作成**
+1. 新しく掲示板投稿テーブルを作成
 ```
 DROP TABLE bbs_entries;
 ```
+
 ```
 CREATE TABLE `bbs_entries` (
     `id` INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -1137,6 +1142,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 </script>
 ```
+
 2. ログインや会員登録フォームまわりの導線を整える
 vim public/login.php
 ```diff
