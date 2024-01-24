@@ -1986,7 +1986,7 @@ if (isset($_POST['body']) && !empty($_SESSION['login_user_id'])) {
 ```
 4. 会員一覧画面にも同様に、設定画面/タイムラインへ遷移しやすいようにしましょう
 vim public/users.php
-```
+```diff
 <body>
   <h1>会員一覧</h1>
 
@@ -2002,7 +2002,7 @@ vim public/users.php
 ```
 5. 自分自身のプロフィールを開いているときに、設定画面に遷移できるようにしてみましょう。また、自分自身に対するフォローボタンなどは非表示にするとよいですね。
 vim public/profile.php
-```
+```diff
   <?php endif; ?>
 </div>
 
@@ -2043,6 +2043,72 @@ vim public/profile.php
 <?php endif; ?>
 ```
 
+6. 直接フォローできるようにする
+vim public/follow.php
+```diff
+<div>
+  <?= htmlspecialchars($followee_user['name']) ?> さんをフォローしました。<br>
+  <a href="/profile.php?user_id=<?= $followee_user['id'] ?>">
+-     <?= htmlspecialchars($followee_user['name']) ?> さんのプロフィールに戻る
++     <?= htmlspecialchars($followee_user['name']) ?> さんのプロフィールへ
++   </a>
++   /
++   <a href="/users.php">
++     会員一覧へ
+  </a>
+</div>
+<?php else: ?>
+```
+
+vim public/users.php
+```diff
+<?php
++ session_start();
+
+$dbh = new PDO('mysql:host=mysql;dbname=techc', 'root', '');
+
+// 会員データを取得
+$select_sth = $dbh->prepare('SELECT * FROM users ORDER BY id DESC');
+$select_sth->execute();
++ 
++ // ログインしている場合、フォローしている会員IDリストを取得
++ $followee_user_ids = [];
++ if (!empty($_SESSION['login_user_id'])) {
++   $followee_users_select_sth = $dbh->prepare(
++     'SELECT * FROM user_relationships WHERE follower_user_id = :follower_user_id'
++   );
++   $followee_users_select_sth->execute([
++     ':follower_user_id' => $_SESSION['login_user_id'],
++   ]);
++   $followee_user_ids = array_map(
++       function ($relationship) {
++           return $relationship['followee_user_id'];
++       },
++       $followee_users_select_sth->fetchAll()
++   ); // array_map で followee_user_id カラムだけ抜き出す
++ }
+?>
+
+<body>
+```
+
+```diff
+      <a href="/profile.php?user_id=<?= $user['id'] ?>" style="margin-left: 1em;">
+        <?= htmlspecialchars($user['name']) ?>
+      </a>
++       <div style="margin-left: 2em;">
++         <?php if($user['id'] === $_SESSION['login_user_id']): ?>
++           これはあなたです!
++         <?php elseif(in_array($user['id'], $followee_user_ids)): ?>
++           フォロー済
++         <?php else: ?>
++           <a href="./follow.php?followee_user_id=<?= $user['id'] ?>">フォローする</a>
++         <?php endif; ?>
++       </div>
+    </div>
+    <hr style="border: none; border-bottom: 1px solid gray;">
+  <?php endforeach; ?>
+```
 タイムラインをJSでレンダリングする
 1. JSON形式でタイムラインの情報を出力する
 vim public/timeline_json.php
