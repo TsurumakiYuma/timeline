@@ -827,7 +827,7 @@ document.addEventListener("DOMContentLoaded", () => {
 </script>
 ```
 2. ログインや会員登録フォームまわりの導線を整える
-3. vim public/login.php
+vim public/login.php
 ```diff
 <h1>ログイン</h1>
 
@@ -870,6 +870,38 @@ vim public/signup_finish.php
 + 会員登録が完了しました。<br>
 + 登録した内容をもとに<a href="/login.php">ログイン</a>してください。
 ```
+
+3. 掲示板の投稿で会員情報も同時に表示する
+vim public/bbs.php
+```diff
+  return;
+}
+
+- // いままで保存してきたものを取得
+- $select_sth = $dbh->prepare('SELECT * FROM bbs_entries ORDER BY created_at DESC');
++ // 投稿データを取得。紐づく会員情報も結合し同時に取得する。
++ $select_sth = $dbh->prepare(
++   'SELECT bbs_entries.*, users.name AS user_name'
++   . ' FROM bbs_entries INNER JOIN users ON bbs_entries.user_id = users.id'
++   . ' ORDER BY bbs_entries.created_at DESC'
++ );
+$select_sth->execute();
+
+// bodyのHTMLを出力するための関数を用意する
+```
+```diff
+      投稿者
+    </dt>
+    <dd>
+-       会員ID: <?= htmlspecialchars($entry['user_id']) ?>
++       <?= htmlspecialchars($entry['user_name']) ?>
++       (ID: <?= htmlspecialchars($entry['user_id']) ?>)
+    </dd>
+    <dt>日時</dt>
+    <dd><?= $entry['created_at'] ?></dd>
+```
+
+
 
 フォロー機能を作ってみましょう
 CREATE TABLE `user_relationships` (
