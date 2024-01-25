@@ -19,7 +19,7 @@ volumes:
 ```
 
 2. PHPのRedis用の拡張， phpredis を導入<br>
-vim Dockerfileに追記↓
+vim Dockerfileに追記
 ```diff
 FROM php:8.1-fpm-alpine AS php
 
