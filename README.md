@@ -17,6 +17,7 @@ volumes:
     driver: local
   mysql:
 ```
+<br>
 
 2. PHPのRedis用の拡張， phpredis を導入<br>
 vim Dockerfileに追記
