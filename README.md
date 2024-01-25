@@ -110,7 +110,7 @@ if (!empty($_POST['name']) && !empty($_POST['email']) && !empty($_POST['password
 ```
 <br>
 
-&emsp;&emsp;vim public/signup_finish.php
+vim public/signup_finish.php
 ```
 <h1>会員登録完了</h1>
 
@@ -344,8 +344,9 @@ vim public/login.php
   // ログインが成功したらログイン完了画面にリダイレクト
   header("HTTP/1.1 302 Found");
 ```
+<br>
 
-vim public/login_finish.php↓
+vim public/login_finish.php
 ```diff
 <?php
 // セッションIDの取得(なければ新規で作成&設定)
@@ -389,8 +390,8 @@ $user = $insert_sth->fetch();
 ```
 <br>
 
-3. PHPパスワード暗号化機能を使う<br>
-vim public/login.php↓
+3. PHPパスワード暗号化機能を使用<br>
+vim public/login.php
 ```diff
     return;
   }
@@ -412,8 +413,9 @@ vim public/login.php↓
   if (!$correct_password) {
     // パスワードが間違っていれば、処理を中断しエラー用クエリパラメータ付きのログイン画面URLにリダイレクト
 ```
+<br>
 
-vim public/signup.php↓
+vim public/signup.php
 ```diff
 if (!empty($_POST['name']) && !empty($_POST['email']) && !empty($_POST['password'])) {
   // POSTで name と email と password が送られてきた場合はDBへの登録処理をする
@@ -499,8 +501,9 @@ $user = $select_sth->fetch();
   <li><a href="./introduction.php">自己紹介文設定</a></li>
 </ul>
 ```
+<br>
 
-vim public/setting/icon.php↓
+vim public/setting/icon.php
 ```
 <?php
 session_start();
@@ -627,6 +630,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 </script>
 ```
+<br>
 
 vim public/setting/name.php
 ```
@@ -678,8 +682,9 @@ if (isset($_POST['name'])) {
 </div>
 <?php endif; ?>
 ```
+<br>
 
-vim public/setting/introduction.php↓
+vim public/setting/introduction.php
 ```
 <?php
 session_start();
@@ -729,6 +734,7 @@ if (isset($_POST['introduction'])) {
 </div>
 <?php endif; ?>
 ```
+<br>
 
 vim public/setting/cover.php
 ```
@@ -859,6 +865,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 </script>
 ```
+<br>
 
 vim public/setting/birthday.php
 ```
@@ -912,7 +919,7 @@ if (isset($_POST['birthday'])) {
 <br>
 
 3. プロフィールページの作成<br>
-vim public/profile.php↓
+vim public/profile.php
 ```
 <?php
 $user = null;
@@ -1008,6 +1015,7 @@ CREATE TABLE `bbs_entries` (
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 ```
+<br>
 
 vim public/bbs.php↓
 ```
@@ -1174,6 +1182,8 @@ vim public/login.php
 <form method="POST">
   <!-- input要素のtype属性は全部textでも動くが、適切なものに設定すると利用者は使いやすい -->
 ```
+<br>
+
 vim public/login_finish.php
 ```diff
 <h1>ログイン完了</h1>
@@ -1186,6 +1196,8 @@ vim public/login_finish.php
 <hr>
 <p>
 ```
+<br>
+
 vim public/signup.php
 ```diff
 
@@ -1198,6 +1210,8 @@ vim public/signup.php
 <form method="POST">
   <!-- input要素のtype属性は全部textでも動くが、適切なものに設定すると利用者は使いやすい -->
 ```
+<br>
+
 vim public/signup_finish.php
 ```diff
 <h1>会員登録完了</h1>
@@ -1291,6 +1305,8 @@ vim public/bbs.php
     <dt>日時</dt>
     <dd><?= $entry['created_at'] ?></dd>
 ```
+<br>
+
 vim public/profile.php
 ```diff
   return;
@@ -1860,6 +1876,8 @@ vim public/login_finish.php
 <hr>
 <p>
 ```
+<br>
+
 vim puclic/profile.php
 ```diff
   $follower_relationship = $select_sth->fetch();
@@ -1871,6 +1889,8 @@ vim puclic/profile.php
 <div style="
     width: 100%; height: 15em;
 ```
+<br>
+
 vim public/setting/index.php
 ```diff
 $user = $select_sth->fetch();
@@ -1882,6 +1902,8 @@ $user = $select_sth->fetch();
 <h1>設定画面</h1>
 
 ```
+<br>
+
 vim public/timeline.php
 ```diff
   // 処理が終わったらリダイレクトする
@@ -2113,6 +2135,7 @@ vim public/follow.php
 </div>
 <?php else: ?>
 ```
+<br>
 
 vim public/users.php
 ```diff
@@ -2504,6 +2527,7 @@ vim public/timeline.php
       entriesRenderArea.appendChild(entryCopied);
     });
 ```
+<br>
 
 vim public/timeline_json.php
 ```diff
@@ -2552,6 +2576,7 @@ vim public/timeline.php
       // 名前のところのリンク先(プロフィール)のURLを設定
       entryCopied.querySelector('[data-role="entryUserAnchor"]').href = entry.user_profile_url;
 ```
+<br>
 
 vim public/timeline_json.php
 ```diff
