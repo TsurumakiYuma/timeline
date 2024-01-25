@@ -49,7 +49,7 @@ CREATE TABLE `users` (
 ```
 
 2. 会員登録フォームの作成（暗号化も行う）<br>
-vim public/signup.php↓
+vim public/signup.php
 ```
 <?php
 // DBに接続
@@ -107,7 +107,7 @@ if (!empty($_POST['name']) && !empty($_POST['email']) && !empty($_POST['password
 </form>
 ```
 
-vim public/signup_finish.php↓
+vim public/signup_finish.php
 ```
 <h1>会員登録完了</h1>
 
@@ -115,7 +115,7 @@ vim public/signup_finish.php↓
 ```
 
 3. ログインフォームの作成<br>
-vim public/login.php↓
+vim public/login.php
 ```
 <?php
 // DBに接続
@@ -221,7 +221,7 @@ if (!empty($_POST['email']) && !empty($_POST['password'])) {
 <?php endif; ?>
 ```
 
-vim public/login_finish.php↓
+vim public/login_finish.php
 ```
 <?php
 // セッションIDの取得(なければ新規で作成&設定)
@@ -285,12 +285,12 @@ $user = $insert_sth->fetch();
 
 **PHPのセッション機能**
 1. php.iniを整える<br>
-vim php.ini↓
+vim php.ini
 ```
 post_max_size = 5M
 upload_max_filesize = 5M
 ```
-vim Dockerfile↓
+vim Dockerfile
 ```diff
 RUN install -o www-data -g www-data -d /var/www/upload/image/
 
@@ -299,7 +299,7 @@ RUN install -o www-data -g www-data -d /var/www/upload/image/
 ```
 
 2. 既存コードの書き換え<br>
-vim public/login.php↓
+vim public/login.php
 ```diff
 - 
 -   # ここからセッションの独自実装 (詳細は後期第1回授業参照) ##############
