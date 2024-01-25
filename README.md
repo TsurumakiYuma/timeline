@@ -280,6 +280,8 @@ $user = $insert_sth->fetch();
   <dd><?= htmlspecialchars($user['name']) ?></dd>
 </dl>
 ```
+<br><br>
+
 
 **PHPのセッション機能**
 1. php.iniを整える<br>
@@ -428,6 +430,8 @@ if (!empty($_POST['name']) && !empty($_POST['email']) && !empty($_POST['password
 
   // 処理が終わったら完了画面にリダイレクト
 ```
+<br><br>
+
 
 **設定画面の追加**
 1. まずカラムを会員情報テーブル users に追加
@@ -975,7 +979,7 @@ $select_sth->execute([
   </dl>
 <?php endforeach ?>
 ```
-
+<br><br>
 
 
 **会員サービスに紐づけた掲示板の作成**
@@ -1330,6 +1334,7 @@ session.save_handler = redis
 session.save_path = "tcp://redis:6379"
 + session.gc_maxlifetime = 86400
 ```
+<br><br>
 
 
 **フォロー機能の作成**
@@ -1600,6 +1605,7 @@ vim public/profile.php
 <?php
   $birthday = DateTime::createFromFormat('Y-m-d', $user['birthday']);
 ```
+<br><br>
 
 
 **タイムラインの作成**
@@ -1778,6 +1784,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 </script>
 ```
+<br><br>
 
 
 **会員一覧画面を作る**
@@ -1812,6 +1819,8 @@ $select_sth->execute();
   <?php endforeach; ?>
 </body>
 ```
+<br><br>
+
 
 **同線管理**
 1. 掲示板へのリンクをタイムラインへのリンクに変更<br>
@@ -2227,6 +2236,7 @@ $sql .= ' ORDER BY id DESC';
         <?php if($user['id'] === $_SESSION['login_user_id']): ?>
           これはあなたです!
 ```
+<br><br>
 
 
 **タイムラインをJSでレンダリングする**
