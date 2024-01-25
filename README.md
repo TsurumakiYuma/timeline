@@ -383,6 +383,7 @@ $insert_sth->execute([
 $user = $insert_sth->fetch();
 ?>
 ```
+<br>
 
 3. PHPパスワード暗号化機能を使う<br>
 vim public/login.php↓
@@ -904,8 +905,9 @@ if (isset($_POST['birthday'])) {
 </div>
 <?php endif; ?>
 ```
+<br>
 
-4. プロフィールページの作成<br>
+3. プロフィールページの作成<br>
 vim public/profile.php↓
 ```
 <?php
@@ -1154,6 +1156,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 </script>
 ```
+<br>
 
 2. ログインや会員登録フォームまわりの導線を整える<br>
 vim public/login.php
@@ -1199,6 +1202,7 @@ vim public/signup_finish.php
 + 会員登録が完了しました。<br>
 + 登録した内容をもとに<a href="/login.php">ログイン</a>してください。
 ```
+<br>
 
 3. 掲示板の投稿で会員情報も同時に表示<br>
 vim public/bbs.php
@@ -1229,6 +1233,8 @@ $select_sth->execute();
     <dt>日時</dt>
     <dd><?= $entry['created_at'] ?></dd>
 ```
+<br>
+
 4. 掲示板の各投稿の横にアイコンを表示<br>
 vim public/bbs.php
 ```diff
@@ -1253,6 +1259,8 @@ $select_sth = $dbh->prepare(
       (ID: <?= htmlspecialchars($entry['user_id']) ?>)
     </dd>
 ```
+<br>
+
 5. 投稿の一覧からプロフィールページに行き来できるように<br>
 vim public/bbs.php
 ```diff
@@ -1288,6 +1296,8 @@ vim public/profile.php
 
 <h1><?= htmlspecialchars($user['name']) ?> さん のプロフィール</h1>
 ```
+<br>
+
 6. プロフィールページに自分の投稿を表示<br>
 vim public/profile.php
 ```diff
@@ -1331,6 +1341,7 @@ vim public/profile.php
 +   </dl>
 + <?php endforeach ?>
 ```
+<br>
 
 7. タイムアウトの時間を延ばす<br>
 vim php.ini
@@ -1352,6 +1363,7 @@ CREATE TABLE `user_relationships` (
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 ```
+<br>
 
 2. フォロー画面の作成<br>
 vim public/follow.php
@@ -1428,6 +1440,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') { // フォームでPOSTした場合�
 </div>
 <?php endif; ?>
 ```
+<br>
+
 3. プロフィールページから遷移できるように<br>
 vim public/profile.php
 ```diff
@@ -1472,6 +1486,7 @@ $select_sth->execute([
 <?php
   $birthday = DateTime::createFromFormat('Y-m-d', $user['birthday']);
 ```
+<br>
 
 4. フォロー一覧<br>
 vim public/follow_list.php 
@@ -1521,6 +1536,7 @@ $select_sth->execute([
   <?php endforeach; ?>
 </ul>
 ```
+<br>
 
 5. フォロワー一覧<br>
 vim public/follower_list.php
@@ -1570,6 +1586,7 @@ $select_sth->execute([
   <?php endforeach; ?>
 </ul>
 ```
+<br>
 
 6. フォロワーのプロフィールページに、フォローされている旨を表示<br>
 vim public/profile.php
@@ -1613,7 +1630,7 @@ vim public/profile.php
 <br><br>
 
 
-**タイムラインの作成**
+**タイムラインの作成（テーブル結合して実装）**
 vim public/timeline.php
 ```
 <?php
@@ -1792,7 +1809,7 @@ document.addEventListener("DOMContentLoaded", () => {
 <br><br>
 
 
-**会員一覧画面を作る**
+**会員一覧画面の作成**
 vim public/users.php
 ```
 <?php
@@ -1827,7 +1844,7 @@ $select_sth->execute();
 <br><br>
 
 
-**同線管理**
+**会員一覧からの同線管理**
 1. 掲示板へのリンクをタイムラインへのリンクに変更<br>
 vim public/login_finish.php
 ```diff
@@ -1881,6 +1898,7 @@ vim public/timeline.php
     <div style="margin: 1em 0;">
       <input type="file" accept="image/*" name="image" id="imageInput">
 ```
+<br>
 
 2. 掲示板の投稿機能を削除<br>
 vim public/bbs.php
@@ -1951,6 +1969,7 @@ function bodyFilter (string $body): string
   </dl>
 <?php endforeach ?>
 ```
+<br>
 
 3. タイムラインにログイン状態を表示<br>
 vim public/timeline.php
@@ -2010,6 +2029,8 @@ if (isset($_POST['body']) && !empty($_SESSION['login_user_id'])) {
 <?php foreach($select_sth as $entry): ?>
   <dl style="margin-bottom: 1em; padding-bottom: 1em; border-bottom: 1px solid #ccc;">
 ```
+<br>
+
 4. 会員一覧画面から設定画面、タイムラインへ遷移できるように<br>
 vim public/users.php
 ```diff
@@ -2026,6 +2047,8 @@ vim public/users.php
     <div style="display: flex; justify-content: start; align-items: center; padding: 1em 2em;">
       <?php if(empty($user['icon_filename'])): ?>
 ```
+<br>
+
 5. 自分のプロフィールから設定画面に遷移できるように、自分自身に対するフォローボタンを非表示に<br>
 vim public/profile.php
 ```diff
@@ -2068,6 +2091,7 @@ vim public/profile.php
 </div>
 <?php endif; ?>
 ```
+<br>
 
 6. 直接フォローできるようにする<br>
 vim public/follow.php
@@ -2135,6 +2159,7 @@ $select_sth->execute();
     <hr style="border: none; border-bottom: 1px solid gray;">
   <?php endforeach; ?>
 ```
+<br>
 
 7. 名前で検索<br>
 vim public/users.php
@@ -2182,6 +2207,7 @@ $followee_user_ids = [];
     <div style="display: flex; justify-content: start; align-items: center; padding: 1em 2em;">
       <?php if(empty($user['icon_filename'])): ?>
 ```
+<br>
 
 8. 生まれ年で検索<br>
 vim public/users.php
@@ -2308,6 +2334,7 @@ header("HTTP/1.1 200 OK");
 header("Content-Type: application/json");
 print(json_encode(['entries' => $result_entries]));
 ```
+<br>
 
 2. JSON形式の情報をもとにJSでHTMLをレンダリング<br>
 vim public/timeline.php
@@ -2450,6 +2477,7 @@ document.addEventListener("DOMContentLoaded", () => {
   imageInput.addEventListener("change", () => {
     if (imageInput.files.length < 1) {
 ```
+<br>
 
 3. 投稿の画像も表示されるように<br>
 vim public/timeline.php
@@ -2483,6 +2511,7 @@ vim public/timeline_json.php
   ];
   $result_entries[] = $result_entry;
 ```
+<br>
 
 4. 投稿者のアイコン画像も表示<br>
 vim public/timeline.php
