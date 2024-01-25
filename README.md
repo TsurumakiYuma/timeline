@@ -108,6 +108,7 @@ if (!empty($_POST['name']) && !empty($_POST['email']) && !empty($_POST['password
   <button type="submit">決定</button>
 </form>
 ```
+<br>
 
 vim public/signup_finish.php
 ```
@@ -223,6 +224,7 @@ if (!empty($_POST['email']) && !empty($_POST['password'])) {
 </div>
 <?php endif; ?>
 ```
+<br>
 
 vim public/login_finish.php
 ```
@@ -293,6 +295,8 @@ vim php.ini
 post_max_size = 5M
 upload_max_filesize = 5M
 ```
+<br>
+
 vim Dockerfile
 ```diff
 RUN install -o www-data -g www-data -d /var/www/upload/image/
