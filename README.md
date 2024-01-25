@@ -107,6 +107,8 @@ if (!empty($_POST['name']) && !empty($_POST['email']) && !empty($_POST['password
 </form>
 ```
 
+<br>
+
 vim public/signup_finish.php
 ```
 <h1>会員登録完了</h1>
