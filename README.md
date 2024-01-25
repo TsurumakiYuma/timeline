@@ -33,6 +33,8 @@ RUN install -o www-data -g www-data -d /var/www/upload/image/
 
 RUN echo -e "post_max_size = 5M\nupload_max_filesize = 5M" >> ${PHP_INI_DIR}/php.ini
 ```
+<br>
+
 
 **会員登録**
 1. 会員情報を保存するテーブルをデータベースに作成
