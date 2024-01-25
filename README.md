@@ -48,6 +48,7 @@ CREATE TABLE `users` (
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 ```
+<br>
 
 2. 会員登録フォームの作成（暗号化も行う）<br>
 vim public/signup.php
@@ -114,6 +115,7 @@ vim public/signup_finish.php
 
 会員登録が完了しました。
 ```
+<br>
 
 3. ログインフォームの作成<br>
 vim public/login.php
@@ -298,6 +300,7 @@ RUN install -o www-data -g www-data -d /var/www/upload/image/
 - RUN echo -e "post_max_size = 5M\nupload_max_filesize = 5M" >> ${PHP_INI_DIR}/php.ini
 + COPY ./php.ini ${PHP_INI_DIR}/php.ini
 ```
+<br>
 
 2. 既存コードの書き換え<br>
 vim public/login.php
@@ -442,6 +445,7 @@ ALTER TABLE `users` ADD COLUMN introduction TEXT DEFAULT NULL;
 ALTER TABLE `users` ADD COLUMN cover_filename TEXT DEFAULT NULL;
 ALTER TABLE `users` ADD COLUMN birthday DATE DEFAULT NULL;
 ```
+<br>
 
 2. 設定画面の作成<br>
 mkdir public/setting<br>
