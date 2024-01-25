@@ -1650,7 +1650,7 @@ vim public/profile.php
 <br><br>
 
 
-**タイムラインの作成（テーブル結合して実装）**
+**タイムラインの作成（テーブル結合して実装）**<br>
 vim public/timeline.php
 ```
 <?php
@@ -1829,7 +1829,7 @@ document.addEventListener("DOMContentLoaded", () => {
 <br><br>
 
 
-**会員一覧画面の作成**
+**会員一覧画面の作成**<br>
 vim public/users.php
 ```
 <?php
